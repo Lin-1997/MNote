@@ -13,6 +13,10 @@ public class Values
 	public static final int RES_CHANGE_PASSWORD = 3;
 	public static final int RES_SIGN_OUT = 4;
 
+	public static final int REQ_ACTION_IMAGE_CAPTURE = 3;
+	public static final int REQ_ACTION_PICK = 4;
+	public static final int REQ_ACTION_CROP = 5;
+
 	public static final int CREATE = 0;
 	public static final int UPDATE = 1;
 

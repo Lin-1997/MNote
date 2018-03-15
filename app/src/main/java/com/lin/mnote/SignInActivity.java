@@ -96,7 +96,7 @@ public class SignInActivity extends AppCompatActivity
 		EditText editTextAccount = findViewById (R.id.editTextAccount);
 		EditText editTextPassword = findViewById (R.id.editTextPassword);
 		final String account = editTextAccount.getText ().toString ();
-		String password = editTextPassword.getText ().toString ();
+		final String password = editTextPassword.getText ().toString ();
 
 		if (account.equals (""))
 		{
@@ -124,58 +124,61 @@ public class SignInActivity extends AppCompatActivity
 		contentView.setLayoutParams (params);
 		dialog.getWindow ().setGravity (Gravity.CENTER);
 		dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+		dialog.show ();
 
 		new Thread (new Runnable ()
 		{
 			@Override public void run ()
 			{
 				Looper.prepare ();
-				dialog.show ();
+				Retrofit retrofit = RetrofitHelper.getRetrofit ();
+				RequestServes requestServes = retrofit.create (RequestServes.class);
+				Call<String> call = requestServes.signIn (account, password);
+				call.enqueue (new Callback<String> ()
+				{
+					@Override public void onResponse (Call<String> call,
+							Response<String> response)
+					{
+						switch (response.body ())
+						{
+							case ":-1":
+								Log.d ("登录", "失败");
+								Toast.makeText (SignInActivity.this,
+										"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+								break;
+							case ":0":
+								Log.d ("登录", "失败");
+								Toast.makeText (SignInActivity.this,
+										"账号密码或许错了", Toast.LENGTH_SHORT).show ();
+								break;
+							default:
+								Log.d ("登录", "成功");
+								// FIXME: 2018/3/13 怎么拿头像
+								// FIXME: 2018/3/13 登录后怎么保存头像
+								writeUserToSQLite (account, response.body ());
+								Intent intent = new Intent ();
+								intent.putExtra ("account", account);
+								intent.putExtra ("name", response.body ());
+								setResult (Values.RES_SIGN_IN, intent);
+								finish ();
+						}
+						dialog.cancel ();
+						call.cancel ();
+					}
+
+					//超时未回应也会进入这个函数
+					@Override public void onFailure (Call<String> call, Throwable t)
+					{
+						Log.d ("登录失败", t.toString ());
+						Toast.makeText (SignInActivity.this,
+								"服务器在维护啦", Toast.LENGTH_SHORT).show ();
+						dialog.cancel ();
+						call.cancel ();
+					}
+				});
 				Looper.loop ();
 			}
 		}).start ();
-
-		Retrofit retrofit = RetrofitHelper.getRetrofit ();
-		RequestServes requestServes = retrofit.create (RequestServes.class);
-		Call<String> call = requestServes.signIn (account, password);
-		call.enqueue (new Callback<String> ()
-		{
-			@Override public void onResponse (Call<String> call, Response<String> response)
-			{
-				switch (response.body ())
-				{
-					case ":-1":
-						Log.d ("登录", "失败");
-						Toast.makeText (SignInActivity.this, "数据被外星人带走了",
-								Toast.LENGTH_SHORT).show ();
-						break;
-					case ":0":
-						Log.d ("登录", "失败");
-						Toast.makeText (SignInActivity.this, "账号密码或许错了",
-								Toast.LENGTH_SHORT).show ();
-						break;
-					default:
-						Log.d ("登录", "成功");
-						writeUserToSQLite (account, response.body ());
-						Intent intent = new Intent ();
-						intent.putExtra ("account", account);
-						intent.putExtra ("name", response.body ());
-						setResult (Values.RES_SIGN_IN, intent);
-						finish ();
-				}
-				dialog.cancel ();
-				call.cancel ();
-			}
-
-			@Override public void onFailure (Call<String> call, Throwable t)
-			{
-				Log.d ("登录失败", t.toString ());
-				Toast.makeText (SignInActivity.this, "服务器在维护啦",
-						Toast.LENGTH_SHORT).show ();
-				dialog.cancel ();
-				call.cancel ();
-			}
-		});
 	}
 
 	public void textViewNewRegister (View view)

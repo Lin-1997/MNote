@@ -3,10 +3,13 @@ package com.lin.mnote;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.lin.bean.User;
@@ -27,12 +30,14 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	protected void onCreate (Bundle savedInstanceState)
 	{
+		//设置主题要在setContentView之前
 		LoadSettingFromSQLite ();
 		setTheme (Values.getTheme ());
 
 		super.onCreate (savedInstanceState);
 		setContentView (R.layout.activity_main);
 
+		// FIXME: 2018/3/13 读取已有用户怎么拿头像
 		LoadUserFromSQLite ();
 		new Thread (new Runnable ()
 		{
@@ -54,8 +59,9 @@ public class MainActivity extends AppCompatActivity
 				switch (resultCode)
 				{
 					case Values.RES_SIGN_IN:
+						// FIXME: 2018/3/13 头像保存在data目录
 						writeUserToMemory (data.getStringExtra ("account"),
-								data.getStringExtra ("name"));
+								data.getStringExtra ("name"), null);
 						Intent intent = new Intent (this, UserCenterActivity.class);
 						startActivityForResult (intent, Values.REQ_USER_CENTER);
 						break;
@@ -68,12 +74,12 @@ public class MainActivity extends AppCompatActivity
 						//数据已经持久化保存，只需要刷新显示
 						if (Values.isChangeAvatar ())
 						{
-							// FIXME: 2018/3/11 刷新头像的显示
+							ImageView imageView = findViewById (R.id.imageViewAvatar);
+							imageView.setImageBitmap (user.getAvatar ());
 							Values.setChangeAvatar (false);
 						}
 						if (Values.isChangeName ())
 						{
-							// FIXME: 2018/3/11 刷新昵称的显示
 							TextView textView = findViewById (R.id.textViewName);
 							textView.setText (user.getName ());
 							Values.setChangeName (false);
@@ -249,12 +255,14 @@ public class MainActivity extends AppCompatActivity
 		Cursor cursor = db.rawQuery ("select * from user where account != \"0\"",
 				null);
 
+		Bitmap bitmap = null;
+
 		if (cursor.getCount () == 1)
 		{
 			//cursor默认在第一个之前的位置
 			cursor.moveToNext ();
 			writeUserToMemory (cursor.getString (cursor.getColumnIndex ("account")),
-					cursor.getString (cursor.getColumnIndex ("name")));
+					cursor.getString (cursor.getColumnIndex ("name")), bitmap);
 		}
 		cursor.close ();
 		db.close ();
@@ -263,15 +271,19 @@ public class MainActivity extends AppCompatActivity
 	/**
 	 * 写入内存用户
 	 */
-	private void writeUserToMemory (String account, String name)
+	private void writeUserToMemory (String account, String name, Bitmap avatar)
 	{
+		if (avatar == null)
+			avatar = BitmapFactory.decodeResource (getResources (), R.drawable.ic_avatar);
 		user = User.getUser ();
-		user.signIn (account, name);
+		user.signIn (account, name, avatar);
 		hasUser = true;
 		TextView textView = findViewById (R.id.textViewName);
 		textView.setText (name);
 		FloatingActionButton floatingActionButton = findViewById (R.id.fabSync);
 		floatingActionButton.setVisibility (View.VISIBLE);
+		ImageView imageView = findViewById (R.id.imageViewAvatar);
+		imageView.setImageBitmap (avatar);
 	}
 
 	/**
@@ -296,7 +308,7 @@ public class MainActivity extends AppCompatActivity
 		SQLiteDatabase db = helper.getWritableDatabase ();
 		db.execSQL ("delete from user");
 		//记录上次的登录账号在name列
-		db.execSQL ("insert into user values (\"0\",\"" + user.getAccount () + "\")");
+		db.execSQL ("insert into user values (\"0\",\"" + user.getAccount () + "\",\",null)");
 		db.close ();
 	}
 

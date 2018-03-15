@@ -37,7 +37,7 @@
 		app:layout_constraintTop_toBottomOf="@+id/appBarLayout"/>
 
 	<RelativeLayout
-		android:id="@+id/changePasswordOld"
+		android:id="@+id/relativeLayoutName"
 		android:layout_width="0dp"
 		android:layout_height="wrap_content"
 		android:layout_marginEnd="32dp"
@@ -48,15 +48,26 @@
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toBottomOf="@+id/imageViewLogo">
 
+		<ImageView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentStart="true"
+			android:layout_centerVertical="true"
+			android:layout_marginLeft="5dp"
+			android:layout_marginStart="5dp"
+			android:padding="4dp"
+			app:srcCompat="@drawable/ic_person_black_24dp"/>
+
 		<EditText
 			android:id="@+id/editTextAccount"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:layout_centerVertical="true"
-			android:layout_marginEnd="32dp"
-			android:layout_marginLeft="10dp"
-			android:layout_marginRight="32dp"
-			android:layout_marginStart="10dp"
+			android:layout_marginEnd="36dp"
+			android:layout_marginLeft="36dp"
+			android:layout_marginRight="36dp"
+			android:layout_marginStart="36dp"
 			android:background="@null"
 			android:hint="@string/account"
 			android:inputType="phone"
@@ -71,6 +82,8 @@
 			android:layout_alignParentEnd="true"
 			android:layout_alignParentRight="true"
 			android:layout_centerVertical="true"
+			android:layout_marginEnd="5dp"
+			android:layout_marginRight="5dp"
 			android:padding="4dp"
 			android:visibility="invisible"
 			app:srcCompat="@drawable/ic_clear_black_24dp"/>
@@ -87,17 +100,28 @@
 		android:background="@drawable/rectangle_with_radius"
 		app:layout_constraintEnd_toEndOf="parent"
 		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintTop_toBottomOf="@+id/changePasswordOld">
+		app:layout_constraintTop_toBottomOf="@+id/relativeLayoutName">
+
+		<ImageView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentStart="true"
+			android:layout_centerVertical="true"
+			android:layout_marginLeft="5dp"
+			android:layout_marginStart="5dp"
+			android:padding="4dp"
+			app:srcCompat="@drawable/ic_person_black_24dp"/>
 
 		<EditText
 			android:id="@+id/editTextPassword"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:layout_centerVertical="true"
-			android:layout_marginEnd="32dp"
-			android:layout_marginLeft="10dp"
-			android:layout_marginRight="32dp"
-			android:layout_marginStart="10dp"
+			android:layout_marginEnd="36dp"
+			android:layout_marginLeft="36dp"
+			android:layout_marginRight="36dp"
+			android:layout_marginStart="36dp"
 			android:background="@null"
 			android:hint="@string/password"
 			android:inputType="textPassword"
@@ -112,6 +136,8 @@
 			android:layout_alignParentEnd="true"
 			android:layout_alignParentRight="true"
 			android:layout_centerVertical="true"
+			android:layout_marginEnd="5dp"
+			android:layout_marginRight="5dp"
 			android:padding="4dp"
 			android:visibility="invisible"
 			app:srcCompat="@drawable/ic_clear_black_24dp"/>
