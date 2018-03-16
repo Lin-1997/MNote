@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -24,6 +26,8 @@ import com.lin.utils.FileHelper;
 import com.lin.utils.SQLiteHelper;
 import com.lin.utils.Values;
 
+import java.io.File;
+
 public class MainActivity extends AppCompatActivity
 {
 	private SQLiteHelper helper;
@@ -31,9 +35,14 @@ public class MainActivity extends AppCompatActivity
 	private boolean hasUser = false;
 	private boolean hasNote = false;
 
-//	final SimpleDateFormat dateFormat1 = new SimpleDateFormat ("yyyy-MM-dd");
-//	final SimpleDateFormat dateFormat2 = new SimpleDateFormat ("HH:mm:ss");
-//	final Date date = new Date (System.currentTimeMillis ());
+	//	final SimpleDateFormat dateFormat1 = new SimpleDateFormat ("yyyy-MM-dd");
+	//	final SimpleDateFormat dateFormat2 = new SimpleDateFormat ("HH:mm:ss");
+	//	final Date date = new Date (System.currentTimeMillis ());
+
+	//头像
+	//getExternalFilesDir (Environment.DIRECTORY_DCIM);
+	//图片
+	//getExternalFilesDir (Environment.DIRECTORY_PICTURES);
 
 	@Override
 	protected void onCreate (Bundle savedInstanceState)
@@ -74,13 +83,15 @@ public class MainActivity extends AppCompatActivity
 			dialog.show ();
 		}
 
-		// FIXME: 2018/3/13 读取已有用户怎么拿头像
 		LoadUserFromSQLite ();
+		LoadAvatarFromFile ();
 		new Thread (new Runnable ()
 		{
 			@Override public void run ()
 			{
+				Looper.prepare ();
 				LoadNoteFromSQLite ();
+				Looper.loop ();
 			}
 		});
 	}
@@ -107,7 +118,8 @@ public class MainActivity extends AppCompatActivity
 					case Values.RES_SIGN_IN:
 						// FIXME: 2018/3/13 头像保存在data目录
 						writeUserToMemory (data.getStringExtra ("account"),
-								data.getStringExtra ("name"), null);
+								data.getStringExtra ("name"));
+						user.setAvatar (null);
 						Intent intent = new Intent (this, UserCenterActivity.class);
 						startActivityForResult (intent, Values.REQ_USER_CENTER);
 						break;
@@ -120,14 +132,14 @@ public class MainActivity extends AppCompatActivity
 						//数据已经持久化保存，只需要刷新显示
 						if (Values.isChangeAvatar ())
 						{
-							ImageView imageView = findViewById (R.id.imageViewAvatar);
-							imageView.setImageBitmap (user.getAvatar ());
+							((ImageView) findViewById (R.id.imageViewAvatar))
+									.setImageBitmap (user.getAvatar ());
 							Values.setChangeAvatar (false);
 						}
 						if (Values.isChangeName ())
 						{
-							TextView textView = findViewById (R.id.textViewName);
-							textView.setText (user.getName ());
+							((TextView) findViewById (R.id.textViewName))
+									.setText (user.getName ());
 							Values.setChangeName (false);
 						}
 						if (Values.isChangeSort ())
@@ -301,14 +313,12 @@ public class MainActivity extends AppCompatActivity
 		Cursor cursor = db.rawQuery ("select * from user where account != \"0\"",
 				null);
 
-		Bitmap bitmap = null;
-
 		if (cursor.getCount () == 1)
 		{
 			//cursor默认在第一个之前的位置
 			cursor.moveToNext ();
 			writeUserToMemory (cursor.getString (cursor.getColumnIndex ("account")),
-					cursor.getString (cursor.getColumnIndex ("name")), bitmap);
+					cursor.getString (cursor.getColumnIndex ("name")));
 		}
 		cursor.close ();
 		db.close ();
@@ -317,19 +327,15 @@ public class MainActivity extends AppCompatActivity
 	/**
 	 * 写入内存用户
 	 */
-	private void writeUserToMemory (String account, String name, Bitmap avatar)
+	private void writeUserToMemory (String account, String name)
 	{
-		if (avatar == null)
-			avatar = BitmapFactory.decodeResource (getResources (), R.drawable.ic_avatar);
 		user = User.getUser ();
-		user.signIn (account, name, avatar);
+		user.signIn (account, name);
 		hasUser = true;
 		TextView textView = findViewById (R.id.textViewName);
 		textView.setText (name);
 		FloatingActionButton floatingActionButton = findViewById (R.id.fabSync);
 		floatingActionButton.setVisibility (View.VISIBLE);
-		ImageView imageView = findViewById (R.id.imageViewAvatar);
-		imageView.setImageBitmap (avatar);
 	}
 
 	/**
@@ -356,6 +362,46 @@ public class MainActivity extends AppCompatActivity
 		//记录上次的登录账号在name列
 		db.execSQL ("insert into user values (\"0\",\"" + user.getAccount () + "\",\",null)");
 		db.close ();
+	}
+
+	/**
+	 * 读取文件头像
+	 */
+	private void LoadAvatarFromFile ()
+	{
+		Bitmap avatar;
+		File file = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
+				"avatar.jpg");
+		if (file.exists ())
+			avatar = BitmapFactory.decodeFile (file.getPath ());
+		else
+			avatar = BitmapFactory.decodeResource (getResources (), R.drawable.ic_avatar);
+		WriteAvatarToMemory (avatar);
+	}
+
+	/**
+	 * 写入内存头像
+	 */
+	private void WriteAvatarToMemory (Bitmap avatar)
+	{
+		((ImageView) findViewById (R.id.imageViewAvatar)).setImageBitmap (avatar);
+		user.setAvatar (avatar);
+	}
+
+	/**
+	 * 写入文件头像
+	 */
+	private void WriteAvatarToFile ()
+	{
+
+	}
+
+	/**
+	 * 清空文件头像
+	 */
+	private void clearAvatarInFile ()
+	{
+
 	}
 
 	/**

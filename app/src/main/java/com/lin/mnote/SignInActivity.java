@@ -13,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -58,7 +57,7 @@ public class SignInActivity extends AppCompatActivity
 		//设置为上次登录的账号
 		editText.setText (getIntent ().getStringExtra ("preAccount"));
 
-		loadColor ();
+		loadView ();
 	}
 
 	@Override
@@ -73,10 +72,9 @@ public class SignInActivity extends AppCompatActivity
 		return true;
 	}
 
-	private void loadColor ()
+	private void loadView ()
 	{
-		Button button = findViewById (R.id.buttonSignIn);
-		button.setBackgroundResource (Values.getBackground ());
+		findViewById (R.id.buttonSignIn).setBackgroundResource (Values.getBackground ());
 		TextView textView = findViewById (R.id.textViewNewRegister);
 		textView.setTextColor (getResources ().getColor (Values.getColor ()));
 		textView = findViewById (R.id.textViewForgetPassword);
@@ -155,6 +153,12 @@ public class SignInActivity extends AppCompatActivity
 								Log.d ("登录", "成功");
 								// FIXME: 2018/3/13 怎么拿头像
 								// FIXME: 2018/3/13 登录后怎么保存头像
+
+								//把file转到getExternalFilesDir (Environment.DIRECTORY_DCIM)目录
+//								File fileTarget = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
+//										"avatar.jpg");
+//								FileHelper.copyFile (file, fileTarget);
+
 								writeUserToSQLite (account, response.body ());
 								Intent intent = new Intent ();
 								intent.putExtra ("account", account);

@@ -7,6 +7,12 @@ import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class FileHelper
 {
@@ -38,5 +44,35 @@ public class FileHelper
 		File dir = new File (path);
 		if (!dir.exists ())
 			dir.mkdirs ();
+	}
+
+	public static void copyFile (File from, File to)
+	{
+		try
+		{
+			InputStream is = new FileInputStream (from);
+			OutputStream os = new FileOutputStream (to);
+			byte bytes[] = new byte[1024];
+			int c;
+			while ((c = is.read (bytes)) > 0)
+				os.write (bytes, 0, c);
+			is.close ();
+			os.close ();
+			deleteFile (from);
+		}
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace ();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace ();
+		}
+	}
+
+	public static void deleteFile (File file)
+	{
+		if (file.exists ())
+			file.delete ();
 	}
 }

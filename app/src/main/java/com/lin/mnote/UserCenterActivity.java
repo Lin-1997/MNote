@@ -19,7 +19,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -30,6 +29,7 @@ import android.widget.Toast;
 import com.lin.bean.User;
 import com.lin.utils.Density;
 import com.lin.utils.EditTextClear;
+import com.lin.utils.FileHelper;
 import com.lin.utils.NetworkDetector;
 import com.lin.utils.RequestServes;
 import com.lin.utils.RetrofitHelper;
@@ -56,13 +56,8 @@ public class UserCenterActivity extends AppCompatActivity
 	private Dialog dialog;
 
 	//系统自带相机的存储地址
-	Uri imageUri = Uri.fromFile (new File (Environment.getExternalStorageDirectory (),
-			"avatar.jpg"));
-
-	//头像
-	//getExternalFilesDir (Environment.DIRECTORY_DCIM);
-	//图片
-	//getExternalFilesDir (Environment.DIRECTORY_PICTURES);
+	Uri imageUri = Uri.fromFile (new File (Environment.getExternalStoragePublicDirectory
+			(Environment.DIRECTORY_DCIM), "avatar.jpg"));
 
 	@Override
 	protected void onCreate (Bundle savedInstanceState)
@@ -84,7 +79,8 @@ public class UserCenterActivity extends AppCompatActivity
 		string += user.getAccount ().substring (7);
 		textViewAccount.setText (string);
 
-		loadColor ();
+		//加载头像，主题
+		loadView ();
 	}
 
 	@Override
@@ -131,8 +127,9 @@ public class UserCenterActivity extends AppCompatActivity
 		super.onActivityResult (requestCode, resultCode, data);
 	}
 
-	private void loadColor ()
+	private void loadView ()
 	{
+		((ImageView) findViewById (R.id.imageViewAvatar)).setImageBitmap (user.getAvatar ());
 		View view = findViewById (R.id.line1);
 		view.setBackgroundResource (Values.getColor ());
 		view = findViewById (R.id.line2);
@@ -147,8 +144,7 @@ public class UserCenterActivity extends AppCompatActivity
 		layout.setBackgroundResource (Values.getSelector ());
 		layout = findViewById (R.id.changePassword);
 		layout.setBackgroundResource (Values.getSelector ());
-		Button button = findViewById (R.id.buttonSignOut);
-		button.setBackgroundResource (Values.getBackground ());
+		findViewById (R.id.buttonSignOut).setBackgroundResource (Values.getBackground ());
 	}
 
 	public void changeAvatar (View view)
@@ -168,6 +164,8 @@ public class UserCenterActivity extends AppCompatActivity
 		TextView textView = contentView.findViewById (R.id.avatarCamera);
 		textView.setBackgroundResource (Values.getSelector ());
 		textView = contentView.findViewById (R.id.avatarGallery);
+		textView.setBackgroundResource (Values.getSelector ());
+		textView = contentView.findViewById (R.id.avatarDefault);
 		textView.setBackgroundResource (Values.getSelector ());
 
 		dialog.setContentView (contentView);
@@ -192,6 +190,9 @@ public class UserCenterActivity extends AppCompatActivity
 			case R.id.avatarGallery: //相册
 				avatarGallery ();
 				break;
+			case R.id.avatarDefault: //清空头像
+				avatarDefault ();
+				break;
 			default:
 				dialog.cancel ();
 				return;
@@ -212,6 +213,19 @@ public class UserCenterActivity extends AppCompatActivity
 		intent.setDataAndType (MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
 				"image/*");
 		startActivityForResult (intent, Values.REQ_ACTION_PICK);
+	}
+
+	private void avatarDefault ()
+	{
+		Bitmap avatar = BitmapFactory.decodeResource (getResources (), R.drawable.ic_avatar);
+		((ImageView) findViewById (R.id.imageViewAvatar)).setImageBitmap (avatar);
+		user.setAvatar (avatar);
+		FileHelper.deleteFile (new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
+				"avatar.jpg"));
+		Log.d ("修改头像", "成功");
+		Toast.makeText (this, "改好了", Toast.LENGTH_SHORT).show ();
+		Values.setChangeName (true);
+		setResult (Values.RES_CHANGE_SOMETHING);
 	}
 
 	private void startPhotoZoom (Uri uri)
@@ -238,21 +252,21 @@ public class UserCenterActivity extends AppCompatActivity
 	private void setPicToView (final Bitmap avatar)
 	{
 		//ProgressBar环形进度条
-		final Dialog dialog = new Dialog (this, R.style.BottomDialog);
+		final Dialog dialogProgressBar = new Dialog (this, R.style.BottomDialog);
 		View contentView = LayoutInflater.from (this).inflate
 				(R.layout.dialog_progress_bar, null);
 		ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
 		progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.getProgress ()));
-		dialog.setContentView (contentView);
+		dialogProgressBar.setContentView (contentView);
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
 				contentView.getLayoutParams ();
 		params.width = getResources ().getDisplayMetrics ().widthPixels
 				- Density.dp2px (this, 16f);
 		params.bottomMargin = Density.dp2px (this, 8f);
 		contentView.setLayoutParams (params);
-		dialog.getWindow ().setGravity (Gravity.CENTER);
-		dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
-		dialog.show ();
+		dialogProgressBar.getWindow ().setGravity (Gravity.CENTER);
+		dialogProgressBar.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+		dialogProgressBar.show ();
 
 		//新建一个线程去访问服务器
 		new Thread (new Runnable ()
@@ -289,9 +303,11 @@ public class UserCenterActivity extends AppCompatActivity
 								break;
 							case ":1":
 								Log.d ("修改头像", "成功");
-								// FIXME: 2018/3/13 把file转到getExternalFilesDir (Environment.DIRECTORY_DCIM)目录
 
-								File file = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM), "avatar.jpg");
+								//把file转到getExternalFilesDir (Environment.DIRECTORY_DCIM)目录
+								File fileTarget = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
+										"avatar.jpg");
+								FileHelper.copyFile (file, fileTarget);
 
 								writeAvatarToMemory (avatar);
 								Values.setChangeAvatar (true);
@@ -299,7 +315,7 @@ public class UserCenterActivity extends AppCompatActivity
 								Toast.makeText (UserCenterActivity.this,
 										"改好了", Toast.LENGTH_SHORT).show ();
 						}
-						dialog.cancel ();
+						dialogProgressBar.cancel ();
 						call.cancel ();
 					}
 
@@ -308,7 +324,7 @@ public class UserCenterActivity extends AppCompatActivity
 						Log.d ("修改头像", t.toString ());
 						Toast.makeText (UserCenterActivity.this,
 								"服务器在维护啦", Toast.LENGTH_SHORT).show ();
-						dialog.cancel ();
+						dialogProgressBar.cancel ();
 						call.cancel ();
 					}
 				});

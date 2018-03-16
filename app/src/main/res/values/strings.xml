@@ -19,6 +19,7 @@
 
 	<string name="avatarCamera">拍照</string>
 	<string name="avatarGallery">相册</string>
+	<string name="avatarDefault">还原默认头像</string>
 	<string name="colorBlue">蓝色</string>
 	<string name="colorGray">灰色</string>
 	<string name="colorRed">红色</string>

@@ -49,11 +49,10 @@ public class User
 		this.avatar = avatar;
 	}
 
-	public void signIn (String account, String name, Bitmap avatar)
+	public void signIn (String account, String name)
 	{
 		this.account = account;
 		this.name = name;
-		this.avatar = avatar;
 	}
 
 	public static void signOut ()
