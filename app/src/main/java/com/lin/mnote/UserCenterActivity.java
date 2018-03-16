@@ -38,7 +38,6 @@ import com.lin.utils.Values;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
@@ -57,8 +56,13 @@ public class UserCenterActivity extends AppCompatActivity
 	private Dialog dialog;
 
 	//系统自带相机的存储地址
-	Uri imageUri = Uri.fromFile (new File (Environment.getExternalStoragePublicDirectory
-			(Environment.DIRECTORY_DCIM), "avatar.jpg"));
+	Uri imageUri = Uri.fromFile (new File (Environment.getExternalStorageDirectory (),
+			"avatar.jpg"));
+
+	//头像
+	//getExternalFilesDir (Environment.DIRECTORY_DCIM);
+	//图片
+	//getExternalFilesDir (Environment.DIRECTORY_PICTURES);
 
 	@Override
 	protected void onCreate (Bundle savedInstanceState)
@@ -101,13 +105,15 @@ public class UserCenterActivity extends AppCompatActivity
 		switch (requestCode)
 		{
 			case Values.REQ_ACTION_IMAGE_CAPTURE: //拍照
-				startPhotoZoom (imageUri);
+				if (resultCode != 0)
+					startPhotoZoom (imageUri);
 				break;
 			case Values.REQ_ACTION_PICK: //相册
-				startPhotoZoom (data.getData ());
+				if (resultCode != 0)
+					startPhotoZoom (imageUri);
 				break;
 			case Values.REQ_ACTION_CROP: //裁剪
-				if (imageUri != null)
+				if (resultCode != 0 && imageUri != null)
 				{
 					try
 					{
@@ -283,7 +289,9 @@ public class UserCenterActivity extends AppCompatActivity
 								break;
 							case ":1":
 								Log.d ("修改头像", "成功");
-								// FIXME: 2018/3/13 把file转到data目录
+								// FIXME: 2018/3/13 把file转到getExternalFilesDir (Environment.DIRECTORY_DCIM)目录
+
+								File file = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM), "avatar.jpg");
 
 								writeAvatarToMemory (avatar);
 								Values.setChangeAvatar (true);

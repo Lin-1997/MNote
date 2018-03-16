@@ -14,6 +14,8 @@
 	<string name="changePassword">修改密码</string>
 	<string name="save">确定</string>
 	<string name="cancel">取消</string>
+	<string name="noSdcard">没有可用的SD卡</string>
+	<string name="exit">那就退出吧</string>
 
 	<string name="avatarCamera">拍照</string>
 	<string name="avatarGallery">相册</string>

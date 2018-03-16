@@ -1,18 +1,26 @@
 package com.lin.mnote;
 
+import android.app.Dialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.lin.bean.User;
+import com.lin.utils.Density;
+import com.lin.utils.FileHelper;
 import com.lin.utils.SQLiteHelper;
 import com.lin.utils.Values;
 
@@ -37,6 +45,35 @@ public class MainActivity extends AppCompatActivity
 		super.onCreate (savedInstanceState);
 		setContentView (R.layout.activity_main);
 
+		if (FileHelper.hasSdcard ())
+			FileHelper.verifyStoragePermissions (this);
+		else
+		{
+			//没有SD卡
+			Dialog dialog = new Dialog (this, R.style.BottomDialog);
+			View contentView = LayoutInflater.from (this).inflate
+					(R.layout.dialog_no_sdcard, null);
+			TextView textView = contentView.findViewById (R.id.exit);
+			textView.setBackgroundResource (Values.getSelector ());
+			textView.setOnClickListener (new View.OnClickListener ()
+			{
+				@Override public void onClick (View v)
+				{
+					finish ();
+				}
+			});
+			dialog.setContentView (contentView);
+			ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
+					contentView.getLayoutParams ();
+			params.width = getResources ().getDisplayMetrics ().widthPixels
+					- Density.dp2px (this, 16f);
+			params.bottomMargin = Density.dp2px (this, 8f);
+			contentView.setLayoutParams (params);
+			dialog.getWindow ().setGravity (Gravity.CENTER);
+			dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			dialog.show ();
+		}
+
 		// FIXME: 2018/3/13 读取已有用户怎么拿头像
 		LoadUserFromSQLite ();
 		new Thread (new Runnable ()
@@ -46,6 +83,15 @@ public class MainActivity extends AppCompatActivity
 				LoadNoteFromSQLite ();
 			}
 		});
+	}
+
+	@Override
+	public void onRequestPermissionsResult (int requestCode,
+			@NonNull String[] permissions, @NonNull int[] grantResults)
+	{
+		super.onRequestPermissionsResult (requestCode, permissions, grantResults);
+		if (requestCode == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+			FileHelper.createDir (this);
 	}
 
 	@Override
