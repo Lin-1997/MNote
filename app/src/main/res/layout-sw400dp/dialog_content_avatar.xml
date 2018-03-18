@@ -35,20 +35,6 @@
 		android:textSize="24sp"/>
 
 	<TextView
-		android:id="@+id/avatarDefault"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:clickable="true"
-		android:focusable="true"
-		android:gravity="center_horizontal"
-		android:onClick="changeAvatarWith"
-		android:paddingBottom="11dp"
-		android:paddingTop="11dp"
-		android:text="@string/avatarDefault"
-		android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-		android:textSize="24sp"/>
-
-	<TextView
 		android:id="@+id/avatarCancel"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"

@@ -3,8 +3,11 @@ package com.lin.utils;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
+import android.util.Base64;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,7 +49,7 @@ public class FileHelper
 			dir.mkdirs ();
 	}
 
-	public static void copyFile (File from, File to)
+	public static void moveFile (File from, File to)
 	{
 		try
 		{
@@ -74,5 +77,33 @@ public class FileHelper
 	{
 		if (file.exists ())
 			file.delete ();
+	}
+
+	public static Bitmap String2Bitmap (String string)
+	{
+		if (string.equals (""))
+			return null;
+		byte[] bytes = Base64.decode (string, Base64.DEFAULT);
+		return BitmapFactory.decodeByteArray (bytes, 0, bytes.length);
+	}
+
+	public static void Bitmap2File (Bitmap bitmap, String path, String name)
+	{
+		File file = new File (path, name);
+		try
+		{
+			FileOutputStream os = new FileOutputStream (file);
+			bitmap.compress (Bitmap.CompressFormat.JPEG, 100, os);
+			os.flush ();
+			os.close ();
+		}
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace ();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace ();
+		}
 	}
 }

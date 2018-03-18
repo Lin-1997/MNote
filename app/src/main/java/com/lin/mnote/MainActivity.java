@@ -9,24 +9,33 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Looper;
+import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.lin.bean.User;
 import com.lin.utils.Density;
 import com.lin.utils.FileHelper;
+import com.lin.utils.RequestServes;
+import com.lin.utils.RetrofitHelper;
 import com.lin.utils.SQLiteHelper;
 import com.lin.utils.Values;
 
 import java.io.File;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -34,6 +43,9 @@ public class MainActivity extends AppCompatActivity
 	private User user;
 	private boolean hasUser = false;
 	private boolean hasNote = false;
+	private Dialog dialog;
+	//uiHandler在主线程中创建，所以自动绑定主线程
+	private Handler uiHandler = new Handler ();
 
 	//	final SimpleDateFormat dateFormat1 = new SimpleDateFormat ("yyyy-MM-dd");
 	//	final SimpleDateFormat dateFormat2 = new SimpleDateFormat ("HH:mm:ss");
@@ -48,13 +60,13 @@ public class MainActivity extends AppCompatActivity
 	protected void onCreate (Bundle savedInstanceState)
 	{
 		//设置主题要在setContentView之前
-		LoadSettingFromSQLite ();
+		loadSettingFromSQLite ();
 		setTheme (Values.getTheme ());
 
 		super.onCreate (savedInstanceState);
 		setContentView (R.layout.activity_main);
 
-		if (FileHelper.hasSdcard ())
+		if (FileHelper.hasSdcard ()) //6.0以上貌似要用户动态授权读写权限
 			FileHelper.verifyStoragePermissions (this);
 		else
 		{
@@ -64,6 +76,7 @@ public class MainActivity extends AppCompatActivity
 					(R.layout.dialog_no_sdcard, null);
 			TextView textView = contentView.findViewById (R.id.exit);
 			textView.setBackgroundResource (Values.getSelector ());
+			//没有SD卡就不能用了
 			textView.setOnClickListener (new View.OnClickListener ()
 			{
 				@Override public void onClick (View v)
@@ -83,19 +96,41 @@ public class MainActivity extends AppCompatActivity
 			dialog.show ();
 		}
 
-		LoadUserFromSQLite ();
-		LoadAvatarFromFile ();
-		new Thread (new Runnable ()
-		{
-			@Override public void run ()
+		dialog = new Dialog (this, R.style.BottomDialog);
+		View contentView = LayoutInflater.from (this).inflate
+				(R.layout.dialog_progress_bar, null);
+		ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
+		progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.getProgress ()));
+
+		dialog.setContentView (contentView);
+		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
+				contentView.getLayoutParams ();
+		params.width = getResources ().getDisplayMetrics ().widthPixels
+				- Density.dp2px (this, 16f);
+		params.bottomMargin = Density.dp2px (this, 8f);
+		contentView.setLayoutParams (params);
+		dialog.getWindow ().setGravity (Gravity.CENTER);
+		dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+		dialog.show ();
+
+		//读取各种数据
+		loadUserFromSQLite ();
+		loadNoteFromSQLite ();
+		//如果发现有用户，这个用户是有头像的，文件又没有头像就去服务器看一看
+		//说不定是缓存被清空了
+		if (hasUser && user.isHasAvatar () && !loadAvatarFromFile ())
+			new Thread (new Runnable ()
 			{
-				Looper.prepare ();
-				LoadNoteFromSQLite ();
-				Looper.loop ();
-			}
-		});
+				@Override public void run ()
+				{
+					loadAvatarFromServer (); //会去UI主线程排队刷新头像显示
+				}
+			}).start ();
+		else
+			dialog.cancel ();
 	}
 
+	//6.0以上貌似要用户授权读写权限
 	@Override
 	public void onRequestPermissionsResult (int requestCode,
 			@NonNull String[] permissions, @NonNull int[] grantResults)
@@ -116,10 +151,12 @@ public class MainActivity extends AppCompatActivity
 				switch (resultCode)
 				{
 					case Values.RES_SIGN_IN:
-						// FIXME: 2018/3/13 头像保存在data目录
-						writeUserToMemory (data.getStringExtra ("account"),
-								data.getStringExtra ("name"));
-						user.setAvatar (null);
+						//数据已经持久化保存，只需要刷新显示
+						if (user.getAvatar () != null)
+							((ImageView) findViewById (R.id.imageViewAvatar))
+									.setImageBitmap (user.getAvatar ());
+						((TextView) findViewById (R.id.textViewName)).setText (user.getName ());
+						findViewById (R.id.fabSync).setVisibility (View.VISIBLE);
 						Intent intent = new Intent (this, UserCenterActivity.class);
 						startActivityForResult (intent, Values.REQ_USER_CENTER);
 						break;
@@ -157,6 +194,7 @@ public class MainActivity extends AppCompatActivity
 						String preAccount = user.getAccount ();
 						clearUserInSQLite ();
 						clearUserInMemory ();
+						clearAvatarInFile ();
 						Intent intent = new Intent (this, SignInActivity.class);
 						intent.putExtra ("preAccount", preAccount);
 						startActivityForResult (intent, Values.REQ_SIGN_IN);
@@ -165,6 +203,7 @@ public class MainActivity extends AppCompatActivity
 						//退出
 						clearUserInSQLite ();
 						clearUserInMemory ();
+						clearAvatarInFile ();
 						break;
 				}
 				break;
@@ -206,7 +245,7 @@ public class MainActivity extends AppCompatActivity
 	/**
 	 * 读取SQLite偏好设置
 	 */
-	private void LoadSettingFromSQLite ()
+	private void loadSettingFromSQLite ()
 	{
 		helper = SQLiteHelper.getHelper (this);
 		/*
@@ -306,7 +345,7 @@ public class MainActivity extends AppCompatActivity
 	/**
 	 * 读取SQLite用户
 	 */
-	private void LoadUserFromSQLite ()
+	private void loadUserFromSQLite ()
 	{
 		helper = SQLiteHelper.getHelper (this);
 		SQLiteDatabase db = helper.getWritableDatabase ();
@@ -318,7 +357,8 @@ public class MainActivity extends AppCompatActivity
 			//cursor默认在第一个之前的位置
 			cursor.moveToNext ();
 			writeUserToMemory (cursor.getString (cursor.getColumnIndex ("account")),
-					cursor.getString (cursor.getColumnIndex ("name")));
+					cursor.getString (cursor.getColumnIndex ("name")),
+					cursor.getString (cursor.getColumnIndex ("avatar")));
 		}
 		cursor.close ();
 		db.close ();
@@ -327,28 +367,14 @@ public class MainActivity extends AppCompatActivity
 	/**
 	 * 写入内存用户
 	 */
-	private void writeUserToMemory (String account, String name)
+	private void writeUserToMemory (String account, String name, String avatar)
 	{
 		user = User.getUser ();
 		user.signIn (account, name);
 		hasUser = true;
-		TextView textView = findViewById (R.id.textViewName);
-		textView.setText (name);
-		FloatingActionButton floatingActionButton = findViewById (R.id.fabSync);
-		floatingActionButton.setVisibility (View.VISIBLE);
-	}
-
-	/**
-	 * 清空内存用户
-	 */
-	private void clearUserInMemory ()
-	{
-		User.signOut ();
-		hasUser = false;
-		TextView textView = findViewById (R.id.textViewName);
-		textView.setText ("登录了可以上传云哦");
-		FloatingActionButton floatingActionButton = findViewById (R.id.fabSync);
-		floatingActionButton.setVisibility (View.INVISIBLE);
+		user.setHasAvatar (avatar.equals ("1"));
+		((TextView) findViewById (R.id.textViewName)).setText (user.getName ());
+		findViewById (R.id.fabSync).setVisibility (View.VISIBLE);
 	}
 
 	/**
@@ -360,40 +386,44 @@ public class MainActivity extends AppCompatActivity
 		SQLiteDatabase db = helper.getWritableDatabase ();
 		db.execSQL ("delete from user");
 		//记录上次的登录账号在name列
-		db.execSQL ("insert into user values (\"0\",\"" + user.getAccount () + "\",\",null)");
+		db.execSQL ("insert into user values (\"0\",\"" + user.getAccount () + "\",\"0\")");
 		db.close ();
+	}
+
+	/**
+	 * 清空内存用户
+	 */
+	private void clearUserInMemory ()
+	{
+		User.signOut ();
+		hasUser = false;
+		((TextView) findViewById (R.id.textViewName)).setText ("登录了可以上传云哦");
+		findViewById (R.id.fabSync).setVisibility (View.INVISIBLE);
 	}
 
 	/**
 	 * 读取文件头像
 	 */
-	private void LoadAvatarFromFile ()
+	private boolean loadAvatarFromFile ()
 	{
-		Bitmap avatar;
 		File file = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
 				"avatar.jpg");
 		if (file.exists ())
-			avatar = BitmapFactory.decodeFile (file.getPath ());
-		else
-			avatar = BitmapFactory.decodeResource (getResources (), R.drawable.ic_avatar);
-		WriteAvatarToMemory (avatar);
+		{
+			writeAvatarToMemory (BitmapFactory.decodeFile (file.getPath ()));
+			((ImageView) findViewById (R.id.imageViewAvatar))
+					.setImageBitmap (user.getAvatar ());
+			return true;
+		}
+		return false;
 	}
 
 	/**
 	 * 写入内存头像
 	 */
-	private void WriteAvatarToMemory (Bitmap avatar)
+	private void writeAvatarToMemory (Bitmap avatar)
 	{
-		((ImageView) findViewById (R.id.imageViewAvatar)).setImageBitmap (avatar);
 		user.setAvatar (avatar);
-	}
-
-	/**
-	 * 写入文件头像
-	 */
-	private void WriteAvatarToFile ()
-	{
-
 	}
 
 	/**
@@ -401,13 +431,81 @@ public class MainActivity extends AppCompatActivity
 	 */
 	private void clearAvatarInFile ()
 	{
+		File file = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
+				"avatar.jpg");
+		FileHelper.deleteFile (file);
+	}
 
+	/**
+	 * 读取服务器头像
+	 */
+	private void loadAvatarFromServer ()
+	{
+		Retrofit retrofit = RetrofitHelper.getRetrofit ();
+		RequestServes requestServes = retrofit.create (RequestServes.class);
+		Call<String> call = requestServes.getAvatar (user.getAccount ());
+		call.enqueue (new Callback<String> ()
+		{
+			@Override public void onResponse (Call<String> call,
+					Response<String> response)
+			{
+				switch (response.body ())
+				{
+					case ":-1":
+						Log.d ("获取头像", "失败");
+						Toast.makeText (MainActivity.this,
+								"头像被外星人带走了", Toast.LENGTH_SHORT).show ();
+						break;
+					default:
+						Log.d ("获取头像", "成功");
+						String avatar = response.body ();
+
+						//把拿到的base64转为Bitmap
+						Bitmap bitmap = FileHelper.String2Bitmap (avatar);
+						if (bitmap != null)
+						{
+							//加进去UI主线程排队，刷新头像显示
+							uiHandler.post (new Runnable ()
+							{
+								@Override public void run ()
+								{
+									((ImageView) findViewById (R.id.imageViewAvatar))
+											.setImageBitmap (user.getAvatar ());
+								}
+							});
+							writeAvatarToMemory (bitmap);
+							writeAvatarToFile (bitmap);
+						}
+				}
+				dialog.cancel ();
+				call.cancel ();
+			}
+
+			//超时未回应也会进入这个函数
+			@Override public void onFailure (Call<String> call, Throwable t)
+			{
+				Log.d ("获取头像", t.toString ());
+				Toast.makeText (MainActivity.this,
+						"服务器在维护啦", Toast.LENGTH_SHORT).show ();
+				dialog.cancel ();
+				call.cancel ();
+			}
+		});
+	}
+
+	/**
+	 * 写入文件头像
+	 */
+	private void writeAvatarToFile (Bitmap bitmap)
+	{
+		FileHelper.Bitmap2File (bitmap, getExternalFilesDir (Environment.DIRECTORY_DCIM)
+				.getPath (), "avatar.jpg");
 	}
 
 	/**
 	 * 读取SQLite笔记
 	 */
-	private void LoadNoteFromSQLite ()
+	private void loadNoteFromSQLite ()
 	{
 
 	}

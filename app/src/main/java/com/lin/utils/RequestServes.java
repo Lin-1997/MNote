@@ -1,12 +1,14 @@
 package com.lin.utils;
 
+import android.graphics.Bitmap;
+
 import java.util.Map;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
-import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
@@ -29,9 +31,13 @@ public interface RequestServes
 	Call<String> signIn (@Field ("account") String account,
 			@Field ("password") String password);
 
+	@POST ("/user/getAvatar")
+	@FormUrlEncoded
+	Call<String> getAvatar (@Field ("account") String account);
+
 	@Multipart
 	@POST ("/user/changeAvatar")
-	Call<String> changeAvatar (@PartMap() Map<String, RequestBody> account,
+	Call<String> changeAvatar (@PartMap () Map<String, RequestBody> account,
 			@Part MultipartBody.Part avatar);
 
 	@POST ("/user/changeName")

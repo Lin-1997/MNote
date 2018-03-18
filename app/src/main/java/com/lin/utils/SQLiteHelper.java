@@ -45,7 +45,8 @@ public class SQLiteHelper extends SQLiteOpenHelper
 		db.execSQL ("insert into setting values(\"1\",\"0\")");
 		db.execSQL ("create table if not exists user(" +
 				"account char(11) primary key," +
-				"name varchar(30) not null)");
+				"name varchar(30) not null," +
+				"avatar char(1) not null)");
 		db.execSQL ("create table if not exists note(" +
 				"id integer primary key autoincrement," +
 				"createDate date not null," +

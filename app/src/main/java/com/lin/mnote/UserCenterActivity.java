@@ -72,12 +72,9 @@ public class UserCenterActivity extends AppCompatActivity
 		getSupportActionBar ().setDisplayHomeAsUpEnabled (true);
 
 		//账号部分隐藏
-		TextView textViewAccount = findViewById (R.id.textViewAccount);
-		String string = "账号：";
-		string += user.getAccount ().substring (0, 3);
-		string += "****";
-		string += user.getAccount ().substring (7);
-		textViewAccount.setText (string);
+		String string = "账号：" + user.getAccount ().substring (0, 3)
+				+ "****" + user.getAccount ().substring (7);
+		((TextView) findViewById (R.id.textViewAccount)).setText (string);
 
 		//加载头像，主题
 		loadView ();
@@ -129,7 +126,8 @@ public class UserCenterActivity extends AppCompatActivity
 
 	private void loadView ()
 	{
-		((ImageView) findViewById (R.id.imageViewAvatar)).setImageBitmap (user.getAvatar ());
+		if (user.getAvatar () != null)
+			((ImageView) findViewById (R.id.imageViewAvatar)).setImageBitmap (user.getAvatar ());
 		View view = findViewById (R.id.line1);
 		view.setBackgroundResource (Values.getColor ());
 		view = findViewById (R.id.line2);
@@ -165,8 +163,6 @@ public class UserCenterActivity extends AppCompatActivity
 		textView.setBackgroundResource (Values.getSelector ());
 		textView = contentView.findViewById (R.id.avatarGallery);
 		textView.setBackgroundResource (Values.getSelector ());
-		textView = contentView.findViewById (R.id.avatarDefault);
-		textView.setBackgroundResource (Values.getSelector ());
 
 		dialog.setContentView (contentView);
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
@@ -190,9 +186,6 @@ public class UserCenterActivity extends AppCompatActivity
 			case R.id.avatarGallery: //相册
 				avatarGallery ();
 				break;
-			case R.id.avatarDefault: //清空头像
-				avatarDefault ();
-				break;
 			default:
 				dialog.cancel ();
 				return;
@@ -213,19 +206,6 @@ public class UserCenterActivity extends AppCompatActivity
 		intent.setDataAndType (MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
 				"image/*");
 		startActivityForResult (intent, Values.REQ_ACTION_PICK);
-	}
-
-	private void avatarDefault ()
-	{
-		Bitmap avatar = BitmapFactory.decodeResource (getResources (), R.drawable.ic_avatar);
-		((ImageView) findViewById (R.id.imageViewAvatar)).setImageBitmap (avatar);
-		user.setAvatar (avatar);
-		FileHelper.deleteFile (new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
-				"avatar.jpg"));
-		Log.d ("修改头像", "成功");
-		Toast.makeText (this, "改好了", Toast.LENGTH_SHORT).show ();
-		Values.setChangeName (true);
-		setResult (Values.RES_CHANGE_SOMETHING);
 	}
 
 	private void startPhotoZoom (Uri uri)
@@ -307,7 +287,7 @@ public class UserCenterActivity extends AppCompatActivity
 								//把file转到getExternalFilesDir (Environment.DIRECTORY_DCIM)目录
 								File fileTarget = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
 										"avatar.jpg");
-								FileHelper.copyFile (file, fileTarget);
+								FileHelper.moveFile (file, fileTarget);
 
 								writeAvatarToMemory (avatar);
 								Values.setChangeAvatar (true);
@@ -514,8 +494,7 @@ public class UserCenterActivity extends AppCompatActivity
 											break;
 										case ":1":
 											Log.d ("修改昵称", "成功");
-											writeNameToSQLite (name);
-											writeNameToMemory (name);
+											writeNameToSQLiteAndMemory (name);
 											Values.setChangeName (true);
 											setResult (Values.RES_CHANGE_SOMETHING);
 											dialog.cancel ();
@@ -760,21 +739,14 @@ public class UserCenterActivity extends AppCompatActivity
 	}
 
 	/**
-	 * 写入SQLite昵称
+	 * 写入SQLite，内存昵称
 	 */
-	private void writeNameToSQLite (String name)
+	private void writeNameToSQLiteAndMemory (String name)
 	{
+		user.setName (name);
 		helper = SQLiteHelper.getHelper (this);
 		SQLiteDatabase db = helper.getWritableDatabase ();
 		db.execSQL ("update user set name = \"" + name + "\"");
 		db.close ();
-	}
-
-	/**
-	 * 写入内存昵称
-	 */
-	private void writeNameToMemory (String name)
-	{
-		user.setName (name);
 	}
 }

@@ -1,10 +1,12 @@
 package com.lin.mnote;
 
 import android.app.Dialog;
-import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Looper;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -19,13 +21,18 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.lin.bean.User;
 import com.lin.utils.Density;
 import com.lin.utils.EditTextClear;
+import com.lin.utils.FileHelper;
 import com.lin.utils.NetworkDetector;
 import com.lin.utils.RequestServes;
 import com.lin.utils.RetrofitHelper;
 import com.lin.utils.SQLiteHelper;
 import com.lin.utils.Values;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -34,6 +41,7 @@ import retrofit2.Retrofit;
 
 public class SignInActivity extends AppCompatActivity
 {
+	private User user;
 
 	@Override
 	protected void onCreate (Bundle savedInstanceState)
@@ -151,19 +159,35 @@ public class SignInActivity extends AppCompatActivity
 								break;
 							default:
 								Log.d ("登录", "成功");
-								// FIXME: 2018/3/13 怎么拿头像
-								// FIXME: 2018/3/13 登录后怎么保存头像
 
-								//把file转到getExternalFilesDir (Environment.DIRECTORY_DCIM)目录
-//								File fileTarget = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
-//										"avatar.jpg");
-//								FileHelper.copyFile (file, fileTarget);
+								String name = "", avatar = "";
+								try
+								{
+									JSONObject jsonObject = new JSONObject (response.body ());
+									name = jsonObject.getString ("name");
+									avatar = jsonObject.getString ("avatar");
+								}
+								catch (JSONException e)
+								{
+									e.printStackTrace ();
+								}
 
-								writeUserToSQLite (account, response.body ());
-								Intent intent = new Intent ();
-								intent.putExtra ("account", account);
-								intent.putExtra ("name", response.body ());
-								setResult (Values.RES_SIGN_IN, intent);
+								//把拿到的base64转为Bitmap
+								Bitmap bitmap = FileHelper.String2Bitmap (avatar);
+								if (bitmap != null)
+								{
+									writeUserToSQLite (account, name, 1);
+									writeUserToMemory (account, name);
+									writeAvatarToMemory (bitmap);
+									writeAvatarToFile (bitmap);
+								}
+								else
+								{
+									writeUserToSQLite (account, name, 0);
+									writeUserToMemory (account, name);
+								}
+
+								setResult (Values.RES_SIGN_IN);
 								finish ();
 						}
 						dialog.cancel ();
@@ -185,11 +209,13 @@ public class SignInActivity extends AppCompatActivity
 		}).start ();
 	}
 
+	// FIXME: 2018/3/18 注册账号
 	public void textViewNewRegister (View view)
 	{
 
 	}
 
+	// FIXME: 2018/3/18 忘记密码
 	public void textViewForgetPassword (View view)
 	{
 
@@ -198,13 +224,40 @@ public class SignInActivity extends AppCompatActivity
 	/**
 	 * 写入SQLite用户
 	 */
-	private void writeUserToSQLite (String account, String name)
+	private void writeUserToSQLite (String account, String name, int avatar)
 	{
 		SQLiteHelper helper = SQLiteHelper.getHelper (this);
 		SQLiteDatabase db = helper.getWritableDatabase ();
 		db.execSQL ("delete from user");
 		db.execSQL ("insert into user values (\"" + account + "\",\"" +
-				name + "\")");
+				name + "\",\"" + avatar + "\")");
 		db.close ();
+	}
+
+	/**
+	 * 写入内存用户
+	 */
+	private void writeUserToMemory (String account, String name)
+	{
+		user = User.getUser ();
+		user.signIn (account, name);
+	}
+
+	/**
+	 * 写入内存头像
+	 */
+	private void writeAvatarToMemory (Bitmap avatar)
+	{
+		user.setAvatar (avatar);
+		user.setHasAvatar (true);
+	}
+
+	/**
+	 * 写入文件头像
+	 */
+	private void writeAvatarToFile (Bitmap bitmap)
+	{
+		FileHelper.Bitmap2File (bitmap, getExternalFilesDir (Environment.DIRECTORY_DCIM)
+				.getPath (), "avatar.jpg");
 	}
 }
