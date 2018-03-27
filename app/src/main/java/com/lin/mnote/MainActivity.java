@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity
 			//没有SD卡
 			Dialog dialog = new Dialog (this, R.style.BottomDialog);
 			View contentView = LayoutInflater.from (this).inflate
-					(R.layout.dialog_no_sdcard, null);
+					(R.layout.dialog_no_sdcard_or_no_permission, null);
 			TextView textView = contentView.findViewById (R.id.exit);
 			textView.setBackgroundResource (Values.getSelector ());
 			//没有SD卡就不能用了
@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity
 			contentView.setLayoutParams (params);
 			dialog.getWindow ().setGravity (Gravity.CENTER);
 			dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			dialog.setCancelable (false);//禁止外部点击关闭
 			dialog.show ();
 		}
 
@@ -138,6 +139,33 @@ public class MainActivity extends AppCompatActivity
 		super.onRequestPermissionsResult (requestCode, permissions, grantResults);
 		if (requestCode == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
 			FileHelper.createDir (this);
+		else if (requestCode == 1 && grantResults[0] ==PackageManager.PERMISSION_DENIED)
+		{
+			Dialog dialog = new Dialog (this, R.style.BottomDialog);
+			View contentView = LayoutInflater.from (this).inflate
+					(R.layout.dialog_no_sdcard_or_no_permission, null);
+			TextView textView = contentView.findViewById (R.id.exit);
+			textView.setBackgroundResource (Values.getSelector ());
+			//没有读写权限就不能用了
+			textView.setOnClickListener (new View.OnClickListener ()
+			{
+				@Override public void onClick (View v)
+				{
+					finish ();
+				}
+			});
+			dialog.setContentView (contentView);
+			ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
+					contentView.getLayoutParams ();
+			params.width = getResources ().getDisplayMetrics ().widthPixels
+					- Density.dp2px (this, 16f);
+			params.bottomMargin = Density.dp2px (this, 8f);
+			contentView.setLayoutParams (params);
+			dialog.getWindow ().setGravity (Gravity.CENTER);
+			dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			dialog.setCancelable (false);//禁止外部点击关闭
+			dialog.show ();
+		}
 	}
 
 	@Override
@@ -152,6 +180,7 @@ public class MainActivity extends AppCompatActivity
 				{
 					case Values.RES_SIGN_IN:
 						//数据已经持久化保存，只需要刷新显示
+						user = User.getUser ();
 						if (user.getAvatar () != null)
 							((ImageView) findViewById (R.id.imageViewAvatar))
 									.setImageBitmap (user.getAvatar ());

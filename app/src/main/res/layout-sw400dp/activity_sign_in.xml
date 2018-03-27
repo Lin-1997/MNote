@@ -111,7 +111,7 @@
 			android:layout_marginLeft="5dp"
 			android:layout_marginStart="5dp"
 			android:padding="4dp"
-			app:srcCompat="@drawable/ic_person_black_24dp"/>
+			app:srcCompat="@drawable/ic_lock_black_24dp"/>
 
 		<EditText
 			android:id="@+id/editTextPassword"
