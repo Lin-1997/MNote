@@ -1,14 +1,15 @@
 package com.lin.mnote;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -33,6 +34,8 @@ import com.lin.utils.Values;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.regex.Pattern;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -80,6 +83,42 @@ public class SignInActivity extends AppCompatActivity
 		return true;
 	}
 
+	@Override
+	protected void onActivityResult (int requestCode, int resultCode, Intent data)
+	{
+		switch (requestCode)
+		{
+			case Values.REQ_SIGN_UP:
+				switch (resultCode)
+				{
+					case Values.RES_SIGN_UP:
+						//注册成功就等同于登录成功？？
+//						String account = data.getExtras ().getString ("account");
+//						writeUserToSQLite (account, account, 0);
+//						writeUserToMemory (account, account);
+//						setResult (Values.RES_SIGN_IN);
+//						finish ();
+//						break;
+					case Values.RES_ACCOUNT_OCCUPIED:
+						//填入账号，方便登录
+						((EditText) findViewById (R.id.editTextAccount))
+								.setText (data.getExtras ().getString ("account"));
+						break;
+				}
+				break;
+			case Values.REQ_FORGET_PASSWORD:
+				switch (resultCode)
+				{
+					case Values.RES_FORGET_PASSWORD:
+						//填入账号，方便登录
+						((EditText) findViewById (R.id.editTextAccount))
+								.setText (data.getExtras ().getString ("account"));
+						break;
+				}
+		}
+		super.onActivityResult (requestCode, resultCode, data);
+	}
+
 	private void loadView ()
 	{
 		findViewById (R.id.buttonSignIn).setBackgroundResource (Values.getBackground ());
@@ -104,14 +143,15 @@ public class SignInActivity extends AppCompatActivity
 		final String account = editTextAccount.getText ().toString ();
 		final String password = editTextPassword.getText ().toString ();
 
-		if (account.equals (""))
+
+		if (TextUtils.isEmpty (account) || !Pattern.matches (Values.accountRegex, account))
 		{
-			Toast.makeText (this, "你没有账号的吗", Toast.LENGTH_SHORT).show ();
+			Toast.makeText (this, "这显然是个假账号", Toast.LENGTH_SHORT).show ();
 			return;
 		}
-		if (password.equals (""))
+		if (TextUtils.isEmpty (password) || !Pattern.matches (Values.passwordRegex, password))
 		{
-			Toast.makeText (this, "你没有密码的吗", Toast.LENGTH_SHORT).show ();
+			Toast.makeText (this, "这显然是个假密码", Toast.LENGTH_SHORT).show ();
 			return;
 		}
 
@@ -142,8 +182,7 @@ public class SignInActivity extends AppCompatActivity
 				Call<String> call = requestServes.signIn (account, password);
 				call.enqueue (new Callback<String> ()
 				{
-					@Override public void onResponse (Call<String> call,
-							Response<String> response)
+					@Override public void onResponse (Call<String> call, Response<String> response)
 					{
 						switch (response.body ())
 						{
@@ -174,14 +213,14 @@ public class SignInActivity extends AppCompatActivity
 
 								//把拿到的base64转为Bitmap
 								Bitmap bitmap = FileHelper.String2Bitmap (avatar);
-								if (bitmap != null)
+								if (bitmap != null) //有头像
 								{
 									writeUserToSQLite (account, name, 1);
 									writeUserToMemory (account, name);
 									writeAvatarToMemory (bitmap);
 									writeAvatarToFile (bitmap);
 								}
-								else
+								else //没头像
 								{
 									writeUserToSQLite (account, name, 0);
 									writeUserToMemory (account, name);
@@ -209,16 +248,18 @@ public class SignInActivity extends AppCompatActivity
 		}).start ();
 	}
 
-	// FIXME: 2018/3/18 注册账号
 	public void textViewNewRegister (View view)
 	{
-
+		Intent intent = new Intent (this, SignUpActivity.class);
+		startActivityForResult (intent, Values.REQ_SIGN_UP);
 	}
 
-	// FIXME: 2018/3/18 忘记密码
 	public void textViewForgetPassword (View view)
 	{
-
+		Intent intent = new Intent (this, ForgetPasswordActivity.class);
+		intent.putExtra ("account", ((EditText) findViewById (R.id.editTextAccount))
+				.getText ().toString ());
+		startActivityForResult (intent, Values.REQ_FORGET_PASSWORD);
 	}
 
 	/**

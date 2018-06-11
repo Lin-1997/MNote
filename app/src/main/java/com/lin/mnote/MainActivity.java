@@ -9,7 +9,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -44,8 +43,6 @@ public class MainActivity extends AppCompatActivity
 	private boolean hasUser = false;
 	private boolean hasNote = false;
 	private Dialog dialog;
-	//uiHandler在主线程中创建，所以自动绑定主线程
-	private Handler uiHandler = new Handler ();
 
 	//	final SimpleDateFormat dateFormat1 = new SimpleDateFormat ("yyyy-MM-dd");
 	//	final SimpleDateFormat dateFormat2 = new SimpleDateFormat ("HH:mm:ss");
@@ -139,7 +136,7 @@ public class MainActivity extends AppCompatActivity
 		super.onRequestPermissionsResult (requestCode, permissions, grantResults);
 		if (requestCode == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
 			FileHelper.createDir (this);
-		else if (requestCode == 1 && grantResults[0] ==PackageManager.PERMISSION_DENIED)
+		else if (requestCode == 1 && grantResults[0] == PackageManager.PERMISSION_DENIED)
 		{
 			Dialog dialog = new Dialog (this, R.style.BottomDialog);
 			View contentView = LayoutInflater.from (this).inflate
@@ -171,8 +168,6 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	protected void onActivityResult (int requestCode, int resultCode, Intent data)
 	{
-		super.onActivityResult (requestCode, resultCode, data);
-
 		switch (requestCode)
 		{
 			case Values.REQ_SIGN_IN:
@@ -181,6 +176,7 @@ public class MainActivity extends AppCompatActivity
 					case Values.RES_SIGN_IN:
 						//数据已经持久化保存，只需要刷新显示
 						user = User.getUser ();
+						hasUser = true;
 						if (user.getAvatar () != null)
 							((ImageView) findViewById (R.id.imageViewAvatar))
 									.setImageBitmap (user.getAvatar ());
@@ -237,6 +233,7 @@ public class MainActivity extends AppCompatActivity
 				}
 				break;
 		}
+		super.onActivityResult (requestCode, resultCode, data);
 	}
 
 	public void imageViewAvatar (View view)
@@ -428,6 +425,7 @@ public class MainActivity extends AppCompatActivity
 		hasUser = false;
 		((TextView) findViewById (R.id.textViewName)).setText ("登录了可以上传云哦");
 		findViewById (R.id.fabSync).setVisibility (View.INVISIBLE);
+		((ImageView) findViewById (R.id.imageViewAvatar)).setImageResource (R.drawable.ic_avatar);
 	}
 
 	/**
@@ -494,14 +492,16 @@ public class MainActivity extends AppCompatActivity
 						if (bitmap != null)
 						{
 							//加进去UI主线程排队，刷新头像显示
-							uiHandler.post (new Runnable ()
+							runOnUiThread (new Runnable ()
 							{
-								@Override public void run ()
+								@Override
+								public void run ()
 								{
 									((ImageView) findViewById (R.id.imageViewAvatar))
 											.setImageBitmap (user.getAvatar ());
 								}
 							});
+
 							writeAvatarToMemory (bitmap);
 							writeAvatarToFile (bitmap);
 						}

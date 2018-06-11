@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:background="@drawable/shape_dialog"
+	android:orientation="vertical">
+
+	<TextView
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:gravity="center_horizontal"
+		android:paddingBottom="10dp"
+		android:paddingTop="10dp"
+		android:text="@string/signOutHint"
+		android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+		android:textSize="20sp"/>
+
+	<TextView
+		android:id="@+id/signOut"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:clickable="true"
+		android:focusable="true"
+		android:gravity="center_horizontal"
+		android:onClick="signOutWith"
+		android:paddingBottom="10dp"
+		android:paddingTop="10dp"
+		android:text="@string/signOut"
+		android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+		android:textSize="20sp"/>
+
+	<TextView
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:background="@drawable/selector_cancel"
+		android:clickable="true"
+		android:focusable="true"
+		android:gravity="center_horizontal"
+		android:onClick="signOutWith"
+		android:paddingBottom="10dp"
+		android:paddingTop="10dp"
+		android:text="@string/cancel"
+		android:textColor="@color/colorCursor"
+		android:textSize="20sp"/>
+
+</LinearLayout>

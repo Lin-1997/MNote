@@ -6,7 +6,8 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:background="@color/colorActivity"
-	tools:context="com.lin.mnote.MainActivity">
+	android:fitsSystemWindows="true"
+	tools:context=".MainActivity">
 
 	<android.support.design.widget.AppBarLayout
 		android:id="@+id/appBarLayout"

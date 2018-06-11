@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:background="@drawable/shape_dialog"
+	android:orientation="vertical">
+
+	<TextView
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:gravity="center_horizontal"
+		android:paddingBottom="11dp"
+		android:paddingTop="11dp"
+		android:text="@string/accountOccupied"
+		android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+		android:textSize="24sp"/>
+
+	<TextView
+		android:id="@+id/gotoSignIn"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:clickable="true"
+		android:focusable="true"
+		android:gravity="center_horizontal"
+		android:onClick="gotoSignIn"
+		android:paddingBottom="11dp"
+		android:paddingTop="11dp"
+		android:text="@string/gotoSignIn"
+		android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+		android:textSize="24sp"/>
+
+	<TextView
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:background="@drawable/selector_cancel"
+		android:clickable="true"
+		android:focusable="true"
+		android:gravity="center_horizontal"
+		android:onClick="gotoSignIn"
+		android:paddingBottom="11dp"
+		android:paddingTop="11dp"
+		android:text="@string/cancel"
+		android:textColor="@color/colorCursor"
+		android:textSize="24sp"/>
+
+</LinearLayout>

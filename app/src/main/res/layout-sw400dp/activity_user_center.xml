@@ -6,6 +6,7 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:background="@color/colorActivity"
+	android:fitsSystemWindows="true"
 	android:orientation="vertical">
 
 	<android.support.design.widget.AppBarLayout
@@ -210,7 +211,7 @@
 				android:layout_marginStart="32dp"
 				android:layout_marginTop="16dp"
 				android:background="@drawable/button_blue"
-				android:onClick="buttonSignOut"
+				android:onClick="signOut"
 				android:text="@string/signOut"
 				android:textColor="#fff"
 				android:textSize="24sp"

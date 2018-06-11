@@ -13,6 +13,7 @@ import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -67,7 +68,6 @@ public class UserCenterActivity extends AppCompatActivity
 
 		Toolbar toolbar = findViewById (R.id.toolbar);
 		toolbar.setBackgroundResource (Values.getColor ());
-		//setSupportActionBar主题貌似会丢失
 		setSupportActionBar (toolbar);
 		getSupportActionBar ().setDisplayHomeAsUpEnabled (true);
 
@@ -76,7 +76,6 @@ public class UserCenterActivity extends AppCompatActivity
 				+ "****" + user.getAccount ().substring (7);
 		((TextView) findViewById (R.id.textViewAccount)).setText (string);
 
-		//加载头像，主题
 		loadView ();
 	}
 
@@ -156,8 +155,8 @@ public class UserCenterActivity extends AppCompatActivity
 		}
 
 		dialog = new Dialog (this, R.style.BottomDialog);
-		View contentView = LayoutInflater.from (this).inflate
-				(R.layout.dialog_content_avatar, null);
+		View contentView = LayoutInflater.from (this)
+				.inflate (R.layout.dialog_content_avatar, null);
 
 		TextView textView = contentView.findViewById (R.id.avatarCamera);
 		textView.setBackgroundResource (Values.getSelector ());
@@ -316,8 +315,8 @@ public class UserCenterActivity extends AppCompatActivity
 	public void changeSort (View view)
 	{
 		dialog = new Dialog (this, R.style.BottomDialog);
-		View contentView = LayoutInflater.from (this).inflate
-				(R.layout.dialog_content_sort, null);
+		View contentView = LayoutInflater.from (this)
+				.inflate (R.layout.dialog_content_sort, null);
 
 		TextView textView = contentView.findViewById (R.id.sortCreate);
 		textView.setBackgroundResource (Values.getSelector ());
@@ -360,8 +359,9 @@ public class UserCenterActivity extends AppCompatActivity
 	public void changeColor (View view)
 	{
 		dialog = new Dialog (this, R.style.BottomDialog);
-		View contentView = LayoutInflater.from (this).inflate
-				(R.layout.dialog_content_color, null);
+		View contentView = LayoutInflater.from (this)
+				.inflate (R.layout.dialog_content_color, null);
+
 		dialog.setContentView (contentView);
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
 				contentView.getLayoutParams ();
@@ -425,110 +425,13 @@ public class UserCenterActivity extends AppCompatActivity
 		}
 
 		dialog = new Dialog (this, R.style.BottomDialog);
-		View contentView = LayoutInflater.from (this).inflate
-				(R.layout.dialog_content_name, null);
+		View contentView = LayoutInflater.from (this)
+				.inflate (R.layout.dialog_content_name, null);
 
-		final EditText editText = contentView.findViewById (R.id.editTextName);
+		EditText editText = contentView.findViewById (R.id.editTextName);
 		ImageView imageView = contentView.findViewById (R.id.imageViewNameClear);
 		EditTextClear.addClearListener (editText, imageView);
-
-		TextView textView = contentView.findViewById (R.id.nameSave);
-		textView.setBackgroundResource (Values.getSelector ());
-		textView.setOnClickListener (new View.OnClickListener ()
-		{
-			@Override public void onClick (View v)
-			{
-				final String name = String.valueOf (editText.getText ());
-				if (name.length () > 10)
-					Toast.makeText (UserCenterActivity.this,
-							"长度10位以内哦", Toast.LENGTH_SHORT).show ();
-				else if (name.length () < 1)
-					Toast.makeText (UserCenterActivity.this,
-							"没有昵称可不行", Toast.LENGTH_SHORT).show ();
-				else if (name.contains ("  "))
-					Toast.makeText (UserCenterActivity.this,
-							"昵称可不能有连续空格", Toast.LENGTH_SHORT).show ();
-				else
-				{
-					//ProgressBar环形进度条
-					final Dialog bottomDialog = new Dialog (UserCenterActivity.this,
-							R.style.BottomDialog);
-					View buttonContentView = LayoutInflater.from (UserCenterActivity.this)
-							.inflate (R.layout.dialog_progress_bar, null);
-					ProgressBar progressBar = buttonContentView.findViewById (R.id.progressBar);
-					progressBar.setIndeterminateDrawable
-							(getResources ().getDrawable (Values.getProgress ()));
-					bottomDialog.setContentView (buttonContentView);
-					ViewGroup.MarginLayoutParams buttonParams = (ViewGroup.MarginLayoutParams)
-							buttonContentView.getLayoutParams ();
-					buttonParams.width = getResources ().getDisplayMetrics ().widthPixels
-							- Density.dp2px (UserCenterActivity.this, 16f);
-					buttonParams.bottomMargin = Density.dp2px
-							(UserCenterActivity.this, 8f);
-					buttonContentView.setLayoutParams (buttonParams);
-					bottomDialog.getWindow ().setGravity (Gravity.CENTER);
-					bottomDialog.getWindow ().setWindowAnimations
-							(R.style.BottomDialog_Animation);
-					bottomDialog.show ();
-
-					//新建一个线程去访问服务器
-					new Thread (new Runnable ()
-					{
-						@Override public void run ()
-						{
-							Looper.prepare ();
-							Retrofit retrofit = RetrofitHelper.getRetrofit ();
-							RequestServes requestServes = retrofit.create (RequestServes.class);
-							Call<String> call = requestServes.changeName (user.getAccount (), name);
-							call.enqueue (new Callback<String> ()
-							{
-								@Override public void onResponse (Call<String> call,
-										Response<String> response)
-								{
-									switch (response.body ())
-									{
-										case ":-1":
-											Log.d ("修改昵称", "失败");
-											Toast.makeText (UserCenterActivity.this,
-													"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
-											break;
-										case ":1":
-											Log.d ("修改昵称", "成功");
-											writeNameToSQLiteAndMemory (name);
-											Values.setChangeName (true);
-											setResult (Values.RES_CHANGE_SOMETHING);
-											dialog.cancel ();
-											Toast.makeText (UserCenterActivity.this,
-													"改好了", Toast.LENGTH_SHORT).show ();
-									}
-									bottomDialog.cancel ();
-									call.cancel ();
-								}
-
-								@Override public void onFailure (Call<String> call, Throwable t)
-								{
-									Log.d ("修改昵称", t.toString ());
-									Toast.makeText (UserCenterActivity.this,
-											"服务器在维护啦", Toast.LENGTH_SHORT).show ();
-									bottomDialog.cancel ();
-									call.cancel ();
-								}
-							});
-							Looper.loop ();
-						}
-					}).start ();
-				}
-			}
-		});
-
-		textView = contentView.findViewById (R.id.nameCancel);
-		textView.setOnClickListener (new View.OnClickListener ()
-		{
-			@Override public void onClick (View v)
-			{
-				dialog.cancel ();
-			}
-		});
+		contentView.findViewById (R.id.nameSave).setBackgroundResource (Values.getSelector ());
 
 		dialog.setContentView (contentView);
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
@@ -540,6 +443,106 @@ public class UserCenterActivity extends AppCompatActivity
 		dialog.getWindow ().setGravity (Gravity.BOTTOM);
 		dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
 		dialog.show ();
+	}
+
+	public void changeNameWith (View view)
+	{
+		boolean networkState = NetworkDetector.detect (this);
+		if (!networkState)
+		{
+			Toast.makeText (this, "网络开小差了",
+					Toast.LENGTH_SHORT).show ();
+			return;
+		}
+
+		if (view.getId () == R.id.nameSave)
+		{
+			EditText editText = ((ViewGroup) view.getParent ())
+					.findViewById (R.id.editTextName);
+			final String name = String.valueOf (editText.getText ());
+
+			if (TextUtils.isEmpty (name))
+				Toast.makeText (UserCenterActivity.this,
+						"没有昵称可不行", Toast.LENGTH_SHORT).show ();
+			else if (name.length () > 10)
+				Toast.makeText (UserCenterActivity.this,
+						"长度10位以内哦", Toast.LENGTH_SHORT).show ();
+			else if (name.contains ("  "))
+				Toast.makeText (UserCenterActivity.this,
+						"昵称可不能有连续空格", Toast.LENGTH_SHORT).show ();
+			else
+			{
+				//ProgressBar环形进度条
+				final Dialog bottomDialog = new Dialog (UserCenterActivity.this,
+						R.style.BottomDialog);
+				View buttonContentView = LayoutInflater.from (UserCenterActivity.this)
+						.inflate (R.layout.dialog_progress_bar, null);
+				ProgressBar progressBar = buttonContentView.findViewById (R.id.progressBar);
+				progressBar.setIndeterminateDrawable
+						(getResources ().getDrawable (Values.getProgress ()));
+				bottomDialog.setContentView (buttonContentView);
+				ViewGroup.MarginLayoutParams buttonParams = (ViewGroup.MarginLayoutParams)
+						buttonContentView.getLayoutParams ();
+				buttonParams.width = getResources ().getDisplayMetrics ().widthPixels
+						- Density.dp2px (UserCenterActivity.this, 16f);
+				buttonParams.bottomMargin = Density.dp2px
+						(UserCenterActivity.this, 8f);
+				buttonContentView.setLayoutParams (buttonParams);
+				bottomDialog.getWindow ().setGravity (Gravity.CENTER);
+				bottomDialog.getWindow ().setWindowAnimations
+						(R.style.BottomDialog_Animation);
+				bottomDialog.show ();
+
+				//新建一个线程去访问服务器
+				new Thread (new Runnable ()
+				{
+					@Override public void run ()
+					{
+						Looper.prepare ();
+						Retrofit retrofit = RetrofitHelper.getRetrofit ();
+						RequestServes requestServes = retrofit.create (RequestServes.class);
+						Call<String> call = requestServes.changeName (user.getAccount (), name);
+						call.enqueue (new Callback<String> ()
+						{
+							@Override public void onResponse (Call<String> call,
+									Response<String> response)
+							{
+								switch (response.body ())
+								{
+									case ":-1":
+										Log.d ("修改昵称", "失败");
+										Toast.makeText (UserCenterActivity.this,
+												"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+										break;
+									case ":1":
+										Log.d ("修改昵称", "成功");
+										writeNameToSQLiteAndMemory (name);
+										Values.setChangeName (true);
+										setResult (Values.RES_CHANGE_SOMETHING);
+										dialog.cancel ();
+										Toast.makeText (UserCenterActivity.this,
+												"改好了", Toast.LENGTH_SHORT).show ();
+								}
+								bottomDialog.cancel ();
+								call.cancel ();
+							}
+
+							@Override public void onFailure (Call<String> call, Throwable t)
+							{
+								Log.d ("修改昵称", t.toString ());
+								Toast.makeText (UserCenterActivity.this,
+										"服务器在维护啦", Toast.LENGTH_SHORT).show ();
+								bottomDialog.cancel ();
+								call.cancel ();
+							}
+						});
+						Looper.loop ();
+					}
+				}).start ();
+			}
+		}
+		else
+			dialog.cancel ();
 	}
 
 	public void changePassword (View view)
@@ -556,137 +559,13 @@ public class UserCenterActivity extends AppCompatActivity
 		View contentView = LayoutInflater.from (this).inflate
 				(R.layout.dialog_content_password, null);
 
-		final EditText editTextOld = contentView.findViewById (R.id.editTextPasswordOld);
+		EditText editTextOld = contentView.findViewById (R.id.editTextPasswordOld);
 		ImageView imageView = contentView.findViewById (R.id.imageViewPasswordOldClear);
 		EditTextClear.addClearListener (editTextOld, imageView);
-		final EditText editTextNew = contentView.findViewById (R.id.editTextPasswordNew);
+		EditText editTextNew = contentView.findViewById (R.id.editTextPasswordNew);
 		imageView = contentView.findViewById (R.id.imageViewPasswordNewClear);
 		EditTextClear.addClearListener (editTextNew, imageView);
-		final EditText editTextAgain = contentView.findViewById (R.id.editTextPasswordAgain);
-		imageView = contentView.findViewById (R.id.imageViewPasswordAgainClear);
-		EditTextClear.addClearListener (editTextAgain, imageView);
-
-		TextView textView = contentView.findViewById (R.id.passwordSave);
-		textView.setBackgroundResource (Values.getSelector ());
-		textView.setOnClickListener (new View.OnClickListener ()
-		{
-			@Override public void onClick (View v)
-			{
-				final String passwordOld = String.valueOf (editTextOld.getText ());
-				final String passwordNew = String.valueOf (editTextNew.getText ());
-				final String passwordAgain = String.valueOf (editTextAgain.getText ());
-
-				if (passwordOld.length () == 0)
-					Toast.makeText (UserCenterActivity.this,
-							"没有原密码可不行", Toast.LENGTH_SHORT).show ();
-				else if (passwordOld.length () < 6 || passwordOld.length () > 16)
-					Toast.makeText (UserCenterActivity.this,
-							"原密码长度都明显不对了", Toast.LENGTH_SHORT).show ();
-				else if (passwordNew.length () == 0)
-					Toast.makeText (UserCenterActivity.this,
-							"不设置新密码了吗", Toast.LENGTH_SHORT).show ();
-				else if (passwordNew.length () < 6 || passwordNew.length () > 16)
-					Toast.makeText (UserCenterActivity.this,
-							"太长太短的密码都不行", Toast.LENGTH_SHORT).show ();
-				else if (passwordAgain.length () == 0)
-					Toast.makeText (UserCenterActivity.this,
-							"再输入一次以防万一吧", Toast.LENGTH_SHORT).show ();
-				else if (passwordAgain.length () < 6 || passwordAgain.length () > 16)
-					Toast.makeText (UserCenterActivity.this,
-							"太长太短的密码都不行", Toast.LENGTH_SHORT).show ();
-				else if (!passwordNew.equals (passwordAgain))
-					Toast.makeText (UserCenterActivity.this,
-							"两次密码竟然不一样", Toast.LENGTH_SHORT).show ();
-				else if (!Pattern.matches ("\\w*", passwordOld)
-						|| !Pattern.matches ("\\w*", passwordNew))
-					Toast.makeText (UserCenterActivity.this,
-							"密码格式不对吧", Toast.LENGTH_SHORT).show ();
-				else
-				{
-					//ProgressBar环形进度条
-					final Dialog bottomDialog = new Dialog (UserCenterActivity.this,
-							R.style.BottomDialog);
-					View buttonContentView = LayoutInflater.from (UserCenterActivity.this).inflate
-							(R.layout.dialog_progress_bar, null);
-					ProgressBar progressBar = buttonContentView.findViewById (R.id.progressBar);
-					progressBar.setIndeterminateDrawable
-							(getResources ().getDrawable (Values.getProgress ()));
-					bottomDialog.setContentView (buttonContentView);
-					ViewGroup.MarginLayoutParams buttonParams = (ViewGroup.MarginLayoutParams)
-							buttonContentView.getLayoutParams ();
-					buttonParams.width = getResources ().getDisplayMetrics ().widthPixels
-							- Density.dp2px (UserCenterActivity.this, 16f);
-					buttonParams.bottomMargin = Density.dp2px
-							(UserCenterActivity.this, 8f);
-					buttonContentView.setLayoutParams (buttonParams);
-					bottomDialog.getWindow ().setGravity (Gravity.CENTER);
-					bottomDialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
-					bottomDialog.show ();
-
-					//新建一个线程去访问服务器
-					new Thread (new Runnable ()
-					{
-						@Override public void run ()
-						{
-							Looper.prepare ();
-							Retrofit retrofit = RetrofitHelper.getRetrofit ();
-							RequestServes requestServes = retrofit.create (RequestServes.class);
-							Call<String> call = requestServes.changePassword
-									(user.getAccount (), passwordOld, passwordNew);
-							call.enqueue (new Callback<String> ()
-							{
-								@Override public void onResponse (Call<String> call,
-										Response<String> response)
-								{
-									switch (response.body ())
-									{
-										case ":-1":
-											Log.d ("修改密码", "失败");
-											Toast.makeText (UserCenterActivity.this,
-													"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
-											break;
-										case ":0":
-											Log.d ("修改密码", "失败");
-											Toast.makeText (UserCenterActivity.this,
-													"原密码错了", Toast.LENGTH_SHORT).show ();
-											break;
-										case ":1":
-											Log.d ("修改密码", "成功");
-											dialog.cancel ();
-											setResult (Values.RES_CHANGE_PASSWORD);
-											Toast.makeText (UserCenterActivity.this,
-													"改好了", Toast.LENGTH_SHORT).show ();
-											finish ();
-									}
-									bottomDialog.cancel ();
-									call.cancel ();
-								}
-
-								@Override public void onFailure (Call<String> call, Throwable t)
-								{
-									Log.d ("修改密码", t.toString ());
-									Toast.makeText (UserCenterActivity.this,
-											"服务器在维护啦",
-											Toast.LENGTH_SHORT).show ();
-									bottomDialog.cancel ();
-									call.cancel ();
-								}
-							});
-							Looper.loop ();
-						}
-					}).start ();
-				}
-			}
-		});
-
-		textView = contentView.findViewById (R.id.passwordCancel);
-		textView.setOnClickListener (new View.OnClickListener ()
-		{
-			@Override public void onClick (View v)
-			{
-				dialog.cancel ();
-			}
-		});
+		contentView.findViewById (R.id.passwordSave).setBackgroundResource (Values.getSelector ());
 
 		dialog.setContentView (contentView);
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
@@ -700,10 +579,140 @@ public class UserCenterActivity extends AppCompatActivity
 		dialog.show ();
 	}
 
-	public void buttonSignOut (View view)
+	public void changePasswordWith (View view)
 	{
-		setResult (Values.RES_SIGN_OUT);
-		finish ();
+		boolean networkState = NetworkDetector.detect (this);
+		if (!networkState)
+		{
+			Toast.makeText (this, "网络开小差了",
+					Toast.LENGTH_SHORT).show ();
+			return;
+		}
+
+		if (view.getId () == R.id.passwordSave)
+		{
+			ViewGroup viewGroup = (ViewGroup) view.getParent ();
+			EditText editText = viewGroup.findViewById (R.id.editTextPasswordOld);
+			final String passwordOld = String.valueOf (editText.getText ());
+			editText = viewGroup.findViewById (R.id.editTextPasswordNew);
+			final String passwordNew = String.valueOf (editText.getText ());
+
+			if (TextUtils.isEmpty (passwordOld) || !Pattern.matches (Values.passwordRegex, passwordOld))
+				Toast.makeText (UserCenterActivity.this,
+						"这显然不是对的原密码", Toast.LENGTH_SHORT).show ();
+			else if (TextUtils.isEmpty (passwordNew) || !Pattern.matches (Values.passwordRegex, passwordNew))
+				Toast.makeText (UserCenterActivity.this,
+						"这显然不是好的新密码", Toast.LENGTH_SHORT).show ();
+			else
+			{
+				//ProgressBar环形进度条
+				final Dialog bottomDialog = new Dialog (UserCenterActivity.this,
+						R.style.BottomDialog);
+				View buttonContentView = LayoutInflater.from (UserCenterActivity.this).inflate
+						(R.layout.dialog_progress_bar, null);
+				ProgressBar progressBar = buttonContentView.findViewById (R.id.progressBar);
+				progressBar.setIndeterminateDrawable
+						(getResources ().getDrawable (Values.getProgress ()));
+				bottomDialog.setContentView (buttonContentView);
+				ViewGroup.MarginLayoutParams buttonParams = (ViewGroup.MarginLayoutParams)
+						buttonContentView.getLayoutParams ();
+				buttonParams.width = getResources ().getDisplayMetrics ().widthPixels
+						- Density.dp2px (UserCenterActivity.this, 16f);
+				buttonParams.bottomMargin = Density.dp2px
+						(UserCenterActivity.this, 8f);
+				buttonContentView.setLayoutParams (buttonParams);
+				bottomDialog.getWindow ().setGravity (Gravity.CENTER);
+				bottomDialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+				bottomDialog.show ();
+
+				//新建一个线程去访问服务器
+				new Thread (new Runnable ()
+				{
+					@Override public void run ()
+					{
+						Looper.prepare ();
+						Retrofit retrofit = RetrofitHelper.getRetrofit ();
+						RequestServes requestServes = retrofit.create (RequestServes.class);
+						Call<String> call = requestServes.changePassword
+								(user.getAccount (), passwordOld, passwordNew);
+						call.enqueue (new Callback<String> ()
+						{
+							@Override public void onResponse (Call<String> call,
+									Response<String> response)
+							{
+								switch (response.body ())
+								{
+									case ":-1":
+										Log.d ("修改密码", "失败");
+										Toast.makeText (UserCenterActivity.this,
+												"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+										break;
+									case ":0":
+										Log.d ("修改密码", "失败");
+										Toast.makeText (UserCenterActivity.this,
+												"原密码错了", Toast.LENGTH_SHORT).show ();
+										break;
+									case ":1":
+										Log.d ("修改密码", "成功");
+										setResult (Values.RES_CHANGE_PASSWORD);
+										Toast.makeText (UserCenterActivity.this,
+												"改好了", Toast.LENGTH_SHORT).show ();
+										dialog.cancel ();
+										finish ();
+								}
+								bottomDialog.cancel ();
+								call.cancel ();
+							}
+
+							@Override public void onFailure (Call<String> call, Throwable t)
+							{
+								Log.d ("修改密码", t.toString ());
+								Toast.makeText (UserCenterActivity.this,
+										"服务器在维护啦",
+										Toast.LENGTH_SHORT).show ();
+								bottomDialog.cancel ();
+								call.cancel ();
+							}
+						});
+						Looper.loop ();
+					}
+				}).start ();
+			}
+		}
+		else
+			dialog.cancel ();
+	}
+
+	public void signOut (View view)
+	{
+		dialog = new Dialog (this, R.style.BottomDialog);
+		View contentView = LayoutInflater.from (this)
+				.inflate (R.layout.dialog_content_sign_out, null);
+
+		contentView.findViewById (R.id.signOut).setBackgroundResource (Values.getSelector ());
+
+		dialog.setContentView (contentView);
+		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
+				contentView.getLayoutParams ();
+		params.width = getResources ().getDisplayMetrics ().widthPixels
+				- Density.dp2px (this, 16f);
+		params.bottomMargin = Density.dp2px (this, 8f);
+		contentView.setLayoutParams (params);
+		dialog.getWindow ().setGravity (Gravity.BOTTOM);
+		dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+		dialog.show ();
+	}
+
+	public void signOutWith (View view)
+	{
+		if (view.getId () == R.id.signOut)
+		{
+			setResult (Values.RES_SIGN_OUT);
+			dialog.cancel ();
+			finish ();
+		}
+		else
+			dialog.cancel ();
 	}
 
 	/**

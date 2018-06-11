@@ -8,14 +8,10 @@
 	android:orientation="vertical">
 
 	<RelativeLayout
-		android:id="@+id/changePasswordOld"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:paddingBottom="11dp"
-		android:paddingTop="11dp"
-		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintTop_toBottomOf="@+id/imageViewLogo">
+		android:paddingTop="11dp">
 
 		<EditText
 			android:id="@+id/editTextName"
@@ -52,6 +48,7 @@
 		android:clickable="true"
 		android:focusable="true"
 		android:gravity="center_horizontal"
+		android:onClick="changeNameWith"
 		android:paddingBottom="11dp"
 		android:paddingTop="11dp"
 		android:text="@string/save"
@@ -59,13 +56,13 @@
 		android:textSize="24sp"/>
 
 	<TextView
-		android:id="@+id/nameCancel"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:background="@drawable/selector_cancel"
 		android:clickable="true"
 		android:focusable="true"
 		android:gravity="center_horizontal"
+		android:onClick="changeNameWith"
 		android:paddingBottom="11dp"
 		android:paddingTop="11dp"
 		android:text="@string/cancel"

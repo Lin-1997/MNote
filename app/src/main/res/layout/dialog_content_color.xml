@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:background="@drawable/shape_dialog"
-	android:orientation="vertical"
-	tools:context="com.lin.mnote.UserCenterActivity">
+	android:orientation="vertical">
 
 	<TextView
 		android:id="@+id/colorBlue"
@@ -144,7 +142,6 @@
 		android:textSize="20sp"/>
 
 	<TextView
-		android:id="@+id/colorCancel"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:background="@drawable/selector_cancel"

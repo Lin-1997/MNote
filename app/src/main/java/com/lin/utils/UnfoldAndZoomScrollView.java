@@ -48,12 +48,11 @@ public class UnfoldAndZoomScrollView extends NestedScrollView
 	private int hideHeight = 0;
 	//扩展放大的头部视图
 	private View headView;
-	//隐藏头部视图高度的比例   为5时即隐藏头部视图顶部1/5高度与底部1/5高度
-	private int hideRatio = 5;
-
-	private UnfoldAndZoomScrollView.OnScrollListener onScrollListener;
+	//隐藏头部视图高度的比例   为4时即隐藏头部视图顶部1/4高度与底部1/5高度
+	private int hideRatio = 4;
 	//下拉扩展的高度
 	private float unfoldHeight = 0f;
+	private UnfoldAndZoomScrollView.OnScrollListener onScrollListener;
 
 	@Override
 	protected void onDraw (Canvas canvas)
@@ -80,9 +79,7 @@ public class UnfoldAndZoomScrollView extends NestedScrollView
 	protected void onFinishInflate ()
 	{
 		super.onFinishInflate ();
-		//不可过度滚动，否则上移后下拉会出现部分空白的情况
 		setOverScrollMode (OVER_SCROLL_NEVER);
-		//获得默认第一个view
 		if (getChildAt (0) != null && getChildAt (0) instanceof ViewGroup && headView == null)
 		{
 			ViewGroup mViewGroup = (ViewGroup) getChildAt (0);
@@ -111,10 +108,9 @@ public class UnfoldAndZoomScrollView extends NestedScrollView
 						pullY = ev.getY ();//滑动到顶部时，记录位置
 					else
 						break;
-
 				int distance = (int) ((ev.getY () - pullY) * zoomRatio);
-				if (distance < 0)
-					break;//若往下滑动
+				if (distance < 0)//若往下滑动
+					break;
 				isUnfolding = true;
 				if (hideHeight > distance)
 				{
@@ -123,7 +119,6 @@ public class UnfoldAndZoomScrollView extends NestedScrollView
 					return true;
 				}
 				setZoom (distance - hideHeight);
-
 				return true;
 			case MotionEvent.ACTION_UP:
 				isUnfolding = false;
@@ -149,9 +144,7 @@ public class UnfoldAndZoomScrollView extends NestedScrollView
 	private void unfoldImage (float distance)
 	{
 		ViewGroup.LayoutParams layoutParams = headView.getLayoutParams ();
-		//下拉时保持居中,设置顶部和底部的边距让隐藏的部分视图显示出来，达到扩展目的
-		((MarginLayoutParams) layoutParams).setMargins (-(layoutParams.width
-						- viewWidth) / 2 > 0 ? 0 : -(layoutParams.width - viewWidth) / 2,
+		((MarginLayoutParams) layoutParams).setMargins (0,
 				(int) (distance - hideHeight), 0, (int) (distance - hideHeight));
 		headView.setLayoutParams (layoutParams);
 	}
@@ -165,13 +158,14 @@ public class UnfoldAndZoomScrollView extends NestedScrollView
 	{
 		float scaleTimes = (float) ((viewWidth + distance) / (viewWidth * 1.0));
 		//如超过最大放大倍数，直接返回
-		if (scaleTimes > maxZoomRatio) return;
-
+		if (scaleTimes > maxZoomRatio)
+			return;
 		ViewGroup.LayoutParams layoutParams = headView.getLayoutParams ();
 		layoutParams.width = (int) (viewWidth + distance);
 		layoutParams.height = (int) (viewHeight * ((viewWidth + distance) / viewWidth));
 		//设置控件水平居中
-		((MarginLayoutParams) layoutParams).setMargins (-(layoutParams.width - viewWidth) / 2, 0, 0, 0);
+		((MarginLayoutParams) layoutParams).setMargins (
+				-(layoutParams.width - viewWidth) / 2, 0, 0, 0);
 		headView.setLayoutParams (layoutParams);
 		isZoom = true;
 	}

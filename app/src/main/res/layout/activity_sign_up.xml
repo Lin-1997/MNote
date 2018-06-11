@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:background="@color/colorActivity"
+	android:fitsSystemWindows="true"
+	tools:context=".SignUpActivity">
+
+	<android.support.design.widget.AppBarLayout
+		android:id="@+id/appBarLayout"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:theme="@style/AppTheme.AppBarOverlay">
+
+		<android.support.v7.widget.Toolbar
+			android:id="@+id/toolbar"
+			android:layout_width="match_parent"
+			android:layout_height="?android:attr/actionBarSize"
+			app:popupTheme="@style/AppTheme.PopupOverlay"
+			app:title="@string/signUp"/>
+
+	</android.support.design.widget.AppBarLayout>
+
+	<de.hdodenhof.circleimageview.CircleImageView
+		android:id="@+id/imageViewLogo"
+		android:layout_width="100dp"
+		android:layout_height="100dp"
+		android:layout_marginEnd="8dp"
+		android:layout_marginStart="8dp"
+		android:layout_marginTop="32dp"
+		android:scaleType="centerCrop"
+		android:src="@drawable/ic_avatar"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/appBarLayout"/>
+
+	<RelativeLayout
+		android:id="@+id/relativeLayoutAccount"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		android:layout_marginEnd="32dp"
+		android:layout_marginStart="32dp"
+		android:layout_marginTop="48dp"
+		android:background="@drawable/rectangle_with_radius"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/imageViewLogo">
+
+		<ImageView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentStart="true"
+			android:layout_centerVertical="true"
+			android:layout_marginLeft="5dp"
+			android:layout_marginStart="5dp"
+			android:padding="2dp"
+			app:srcCompat="@drawable/ic_person_black_24dp"/>
+
+		<EditText
+			android:id="@+id/editTextAccount"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_centerVertical="true"
+			android:layout_marginEnd="32dp"
+			android:layout_marginLeft="32dp"
+			android:layout_marginRight="32dp"
+			android:layout_marginStart="32dp"
+			android:background="@null"
+			android:hint="@string/phone"
+			android:inputType="phone"
+			android:textColorHint="@color/colorCursor"
+			android:textCursorDrawable="@drawable/color_cursor"
+			android:textSize="20sp"/>
+
+		<ImageView
+			android:id="@+id/imageViewAccountClear"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentEnd="true"
+			android:layout_alignParentRight="true"
+			android:layout_centerVertical="true"
+			android:layout_marginEnd="5dp"
+			android:layout_marginRight="5dp"
+			android:padding="2dp"
+			android:visibility="invisible"
+			app:srcCompat="@drawable/ic_clear_black_24dp"/>
+
+	</RelativeLayout>
+
+	<RelativeLayout
+		android:id="@+id/relativeLayoutNonce"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		android:layout_marginEnd="32dp"
+		android:layout_marginStart="32dp"
+		android:layout_marginTop="8dp"
+		android:background="@drawable/rectangle_with_radius"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/relativeLayoutAccount">
+
+		<ImageView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentStart="true"
+			android:layout_centerVertical="true"
+			android:layout_marginLeft="5dp"
+			android:layout_marginStart="5dp"
+			android:padding="2dp"
+			app:srcCompat="@drawable/ic_dialpad_black_24dp"/>
+
+		<EditText
+			android:id="@+id/editTextNonce"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_centerVertical="true"
+			android:layout_marginEnd="128dp"
+			android:layout_marginLeft="32dp"
+			android:layout_marginRight="128dp"
+			android:layout_marginStart="32dp"
+			android:background="@null"
+			android:hint="@string/nonce"
+			android:inputType="phone"
+			android:textColorHint="@color/colorCursor"
+			android:textCursorDrawable="@drawable/color_cursor"
+			android:textSize="20sp"/>
+
+		<ImageView
+			android:id="@+id/imageViewNonceClear"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentEnd="true"
+			android:layout_alignParentRight="true"
+			android:layout_centerVertical="true"
+			android:layout_marginEnd="100dp"
+			android:layout_marginRight="100dp"
+			android:padding="2dp"
+			android:visibility="invisible"
+			app:srcCompat="@drawable/ic_clear_black_24dp"/>
+
+		<TextView
+			android:id="@+id/textViewGetNonce"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentEnd="true"
+			android:layout_alignParentRight="true"
+			android:layout_centerVertical="true"
+			android:layout_marginEnd="5dp"
+			android:layout_marginRight="5dp"
+			android:clickable="true"
+			android:focusable="true"
+			android:onClick="textViewGetNonce"
+			android:paddingLeft="2dp"
+			android:paddingRight="2dp"
+			android:text="@string/getNonce"
+			android:textColor="@color/colorBlue"
+			android:textSize="18sp"/>
+
+	</RelativeLayout>
+
+	<RelativeLayout
+		android:id="@+id/relativeLayoutPassword"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		android:layout_marginEnd="32dp"
+		android:layout_marginStart="32dp"
+		android:layout_marginTop="8dp"
+		android:background="@drawable/rectangle_with_radius"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/relativeLayoutNonce">
+
+		<ImageView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentStart="true"
+			android:layout_centerVertical="true"
+			android:layout_marginLeft="5dp"
+			android:layout_marginStart="5dp"
+			android:padding="2dp"
+			app:srcCompat="@drawable/ic_lock_black_24dp"/>
+
+		<EditText
+			android:id="@+id/editTextPassword"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_centerVertical="true"
+			android:layout_marginEnd="32dp"
+			android:layout_marginLeft="32dp"
+			android:layout_marginRight="32dp"
+			android:layout_marginStart="32dp"
+			android:background="@null"
+			android:hint="@string/password"
+			android:inputType="textPassword"
+			android:textColorHint="@color/colorCursor"
+			android:textCursorDrawable="@drawable/color_cursor"
+			android:textSize="20sp"/>
+
+		<ImageView
+			android:id="@+id/imageViewPasswordClear"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentEnd="true"
+			android:layout_alignParentRight="true"
+			android:layout_centerVertical="true"
+			android:layout_marginEnd="5dp"
+			android:layout_marginRight="5dp"
+			android:padding="2dp"
+			android:visibility="invisible"
+			app:srcCompat="@drawable/ic_clear_black_24dp"/>
+
+	</RelativeLayout>
+
+	<Button
+		android:id="@+id/buttonSignUp"
+		android:layout_width="0dp"
+		android:layout_height="46dp"
+		android:layout_marginEnd="32dp"
+		android:layout_marginStart="32dp"
+		android:layout_marginTop="48dp"
+		android:background="@drawable/button_blue"
+		android:onClick="buttonSignUp"
+		android:text="@string/signUp"
+		android:textColor="#fff"
+		android:textSize="20sp"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/relativeLayoutPassword"/>
+
+</android.support.constraint.ConstraintLayout>
