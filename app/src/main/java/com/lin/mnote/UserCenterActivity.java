@@ -131,11 +131,7 @@ public class UserCenterActivity extends AppCompatActivity
 		view.setBackgroundResource (Values.getColor ());
 		view = findViewById (R.id.line2);
 		view.setBackgroundResource (Values.getColor ());
-		view = findViewById (R.id.line3);
-		view.setBackgroundResource (Values.getColor ());
-		RelativeLayout layout = findViewById (R.id.changeNoteSort);
-		layout.setBackgroundResource (Values.getSelector ());
-		layout = findViewById (R.id.changeColor);
+		RelativeLayout layout = findViewById (R.id.changeColor);
 		layout.setBackgroundResource (Values.getSelector ());
 		layout = findViewById (R.id.changeName);
 		layout.setBackgroundResource (Values.getSelector ());
@@ -230,12 +226,13 @@ public class UserCenterActivity extends AppCompatActivity
 
 	private void setPicToView (final Bitmap avatar)
 	{
-		//ProgressBar环形进度条
 		final Dialog dialogProgressBar = new Dialog (this, R.style.BottomDialog);
 		View contentView = LayoutInflater.from (this).inflate
 				(R.layout.dialog_progress_bar, null);
+
 		ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
 		progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.getProgress ()));
+
 		dialogProgressBar.setContentView (contentView);
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
 				contentView.getLayoutParams ();
@@ -310,50 +307,6 @@ public class UserCenterActivity extends AppCompatActivity
 				Looper.loop ();
 			}
 		}).start ();
-	}
-
-	public void changeSort (View view)
-	{
-		dialog = new Dialog (this, R.style.BottomDialog);
-		View contentView = LayoutInflater.from (this)
-				.inflate (R.layout.dialog_content_sort, null);
-
-		TextView textView = contentView.findViewById (R.id.sortCreate);
-		textView.setBackgroundResource (Values.getSelector ());
-		textView = contentView.findViewById (R.id.sortUpdate);
-		textView.setBackgroundResource (Values.getSelector ());
-
-		dialog.setContentView (contentView);
-		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
-				contentView.getLayoutParams ();
-		params.width = getResources ().getDisplayMetrics ().widthPixels
-				- Density.dp2px (this, 16f);
-		params.bottomMargin = Density.dp2px (this, 8f);
-		contentView.setLayoutParams (params);
-		dialog.getWindow ().setGravity (Gravity.BOTTOM);
-		dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
-		dialog.show ();
-	}
-
-	public void changeSortWith (View view)
-	{
-		switch (view.getId ())
-		{
-			case R.id.sortCreate:
-				Values.setSort (Values.CREATE);
-				Values.setChangeSort (true);
-				break;
-			case R.id.sortUpdate:
-				Values.setSort (Values.UPDATE);
-				Values.setChangeSort (true);
-				break;
-			default:
-				dialog.cancel ();
-				return;
-		}
-		writeSortToSQLite ();
-		setResult (Values.RES_CHANGE_SOMETHING);
-		dialog.cancel ();
 	}
 
 	public void changeColor (View view)
@@ -472,14 +425,15 @@ public class UserCenterActivity extends AppCompatActivity
 						"昵称可不能有连续空格", Toast.LENGTH_SHORT).show ();
 			else
 			{
-				//ProgressBar环形进度条
 				final Dialog bottomDialog = new Dialog (UserCenterActivity.this,
 						R.style.BottomDialog);
 				View buttonContentView = LayoutInflater.from (UserCenterActivity.this)
 						.inflate (R.layout.dialog_progress_bar, null);
+
 				ProgressBar progressBar = buttonContentView.findViewById (R.id.progressBar);
 				progressBar.setIndeterminateDrawable
 						(getResources ().getDrawable (Values.getProgress ()));
+
 				bottomDialog.setContentView (buttonContentView);
 				ViewGroup.MarginLayoutParams buttonParams = (ViewGroup.MarginLayoutParams)
 						buttonContentView.getLayoutParams ();
@@ -605,14 +559,15 @@ public class UserCenterActivity extends AppCompatActivity
 						"这显然不是好的新密码", Toast.LENGTH_SHORT).show ();
 			else
 			{
-				//ProgressBar环形进度条
 				final Dialog bottomDialog = new Dialog (UserCenterActivity.this,
 						R.style.BottomDialog);
 				View buttonContentView = LayoutInflater.from (UserCenterActivity.this).inflate
 						(R.layout.dialog_progress_bar, null);
+
 				ProgressBar progressBar = buttonContentView.findViewById (R.id.progressBar);
 				progressBar.setIndeterminateDrawable
 						(getResources ().getDrawable (Values.getProgress ()));
+
 				bottomDialog.setContentView (buttonContentView);
 				ViewGroup.MarginLayoutParams buttonParams = (ViewGroup.MarginLayoutParams)
 						buttonContentView.getLayoutParams ();
@@ -723,17 +678,6 @@ public class UserCenterActivity extends AppCompatActivity
 		user.setAvatar (avatar);
 		ImageView imageView = findViewById (R.id.imageViewAvatar);
 		imageView.setImageBitmap (avatar);
-	}
-
-	/**
-	 * 写入SQLite排序方式
-	 */
-	private void writeSortToSQLite ()
-	{
-		helper = SQLiteHelper.getHelper (this);
-		SQLiteDatabase db = helper.getWritableDatabase ();
-		db.execSQL ("update setting set sort = \"" + Values.getSort () + "\"");
-		db.close ();
 	}
 
 	/**

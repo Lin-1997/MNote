@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<android.support.constraint.ConstraintLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
@@ -11,22 +11,38 @@
 
 	<android.support.design.widget.AppBarLayout
 		android:id="@+id/appBarLayout"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:theme="@style/AppTheme.AppBarOverlay">
+		android:layout_width="0dp"
+		android:layout_height="0dp"
+		android:theme="@style/AppTheme.AppBarOverlay"
+		app:layout_constraintBottom_toTopOf="@+id/GLBar"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent">
 
 		<android.support.v7.widget.Toolbar
 			android:id="@+id/toolbar"
 			android:layout_width="match_parent"
-			android:layout_height="?attr/actionBarSize"
+			android:layout_height="match_parent"
 			app:popupTheme="@style/AppTheme.PopupOverlay"
 			app:title="@string/userCenter"/>
 
 	</android.support.design.widget.AppBarLayout>
 
+	<android.support.constraint.Guideline
+		android:id="@+id/GLBar"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal"
+		app:layout_constraintGuide_percent="0.1"/>
+
 	<com.lin.utils.UnfoldAndZoomScrollView
-		android:layout_width="match_parent"
-		android:layout_height="match_parent">
+		android:layout_width="0dp"
+		android:layout_height="0dp"
+		android:fillViewport="true"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/GLBar">
 
 		<android.support.constraint.ConstraintLayout
 			android:layout_width="match_parent"
@@ -46,17 +62,30 @@
 				app:layout_constraintTop_toTopOf="parent"
 				app:srcCompat="@drawable/ic_avatar"/>
 
-			<TextView
-				android:id="@+id/textViewAccount"
+			<android.support.constraint.Guideline
+				android:id="@+id/GLLeft"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_marginEnd="8dp"
-				android:layout_marginStart="8dp"
-				android:layout_marginTop="8dp"
+				android:orientation="vertical"
+				app:layout_constraintGuide_percent="0.1"/>
+
+			<android.support.constraint.Guideline
+				android:id="@+id/GLRight"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:orientation="vertical"
+				app:layout_constraintGuide_percent="0.9"/>
+
+			<TextView
+				android:id="@+id/textViewAccount"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="16dp"
+				android:gravity="center"
 				android:textAppearance="@style/TextAppearance.AppCompat.Body1"
 				android:textSize="20sp"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintEnd_toEndOf="@+id/GLRight"
+				app:layout_constraintStart_toStartOf="@+id/GLLeft"
 				app:layout_constraintTop_toBottomOf="@+id/imageViewAvatar"
 				tools:text="账号"/>
 
@@ -64,54 +93,24 @@
 				android:id="@+id/line1"
 				android:layout_width="0dp"
 				android:layout_height="1dp"
-				android:layout_marginEnd="32dp"
-				android:layout_marginStart="32dp"
 				android:layout_marginTop="8dp"
 				android:background="@color/colorBlue"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintEnd_toEndOf="@+id/GLRight"
+				app:layout_constraintStart_toStartOf="@+id/GLLeft"
 				app:layout_constraintTop_toBottomOf="@+id/textViewAccount"/>
-
-			<RelativeLayout
-				android:id="@+id/changeNoteSort"
-				android:layout_width="0dp"
-				android:layout_height="46dp"
-				android:layout_marginEnd="32dp"
-				android:layout_marginStart="32dp"
-				android:layout_marginTop="8dp"
-				android:background="@drawable/selector_blue"
-				android:clickable="true"
-				android:focusable="true"
-				android:onClick="changeSort"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toStartOf="parent"
-				app:layout_constraintTop_toBottomOf="@+id/line1">
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:layout_centerHorizontal="true"
-					android:layout_centerVertical="true"
-					android:text="@string/noteSort"
-					android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-					android:textSize="20sp"/>
-
-			</RelativeLayout>
 
 			<RelativeLayout
 				android:id="@+id/changeColor"
 				android:layout_width="0dp"
 				android:layout_height="46dp"
-				android:layout_marginEnd="32dp"
-				android:layout_marginStart="32dp"
 				android:layout_marginTop="8dp"
 				android:background="@drawable/selector_blue"
 				android:clickable="true"
 				android:focusable="true"
 				android:onClick="changeColor"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toStartOf="parent"
-				app:layout_constraintTop_toBottomOf="@+id/changeNoteSort">
+				app:layout_constraintEnd_toEndOf="@+id/GLRight"
+				app:layout_constraintStart_toStartOf="@+id/GLLeft"
+				app:layout_constraintTop_toBottomOf="@+id/line1">
 
 				<TextView
 					android:layout_width="wrap_content"
@@ -124,32 +123,18 @@
 
 			</RelativeLayout>
 
-			<View
-				android:id="@+id/line2"
-				android:layout_width="0dp"
-				android:layout_height="1dp"
-				android:layout_marginEnd="32dp"
-				android:layout_marginStart="32dp"
-				android:layout_marginTop="8dp"
-				android:background="@color/colorBlue"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toStartOf="parent"
-				app:layout_constraintTop_toBottomOf="@+id/changeColor"/>
-
 			<RelativeLayout
 				android:id="@+id/changeName"
 				android:layout_width="0dp"
 				android:layout_height="46dp"
-				android:layout_marginEnd="32dp"
-				android:layout_marginStart="32dp"
 				android:layout_marginTop="8dp"
 				android:background="@drawable/selector_blue"
 				android:clickable="true"
 				android:focusable="true"
 				android:onClick="changeName"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toStartOf="parent"
-				app:layout_constraintTop_toBottomOf="@+id/line2">
+				app:layout_constraintEnd_toEndOf="@+id/GLRight"
+				app:layout_constraintStart_toStartOf="@+id/GLLeft"
+				app:layout_constraintTop_toBottomOf="@+id/changeColor">
 
 				<TextView
 					android:layout_width="wrap_content"
@@ -166,15 +151,13 @@
 				android:id="@+id/changePassword"
 				android:layout_width="0dp"
 				android:layout_height="46dp"
-				android:layout_marginEnd="32dp"
-				android:layout_marginStart="32dp"
 				android:layout_marginTop="8dp"
 				android:background="@drawable/selector_blue"
 				android:clickable="true"
 				android:focusable="true"
 				android:onClick="changePassword"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintEnd_toEndOf="@+id/GLRight"
+				app:layout_constraintStart_toStartOf="@+id/GLLeft"
 				app:layout_constraintTop_toBottomOf="@+id/changeName">
 
 				<TextView
@@ -189,35 +172,31 @@
 			</RelativeLayout>
 
 			<View
-				android:id="@+id/line3"
+				android:id="@+id/line2"
 				android:layout_width="0dp"
 				android:layout_height="1dp"
-				android:layout_marginEnd="32dp"
-				android:layout_marginStart="32dp"
 				android:layout_marginTop="8dp"
 				android:background="@color/colorBlue"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintEnd_toEndOf="@+id/GLRight"
+				app:layout_constraintStart_toStartOf="@+id/GLLeft"
 				app:layout_constraintTop_toBottomOf="@+id/changePassword"/>
 
 			<Button
 				android:id="@+id/buttonSignOut"
 				android:layout_width="0dp"
 				android:layout_height="46dp"
-				android:layout_marginEnd="32dp"
-				android:layout_marginStart="32dp"
 				android:layout_marginTop="16dp"
 				android:background="@drawable/button_blue"
 				android:onClick="signOut"
 				android:text="@string/signOut"
 				android:textColor="#fff"
 				android:textSize="20sp"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toStartOf="parent"
-				app:layout_constraintTop_toBottomOf="@+id/line3"/>
+				app:layout_constraintEnd_toEndOf="@+id/GLRight"
+				app:layout_constraintStart_toStartOf="@+id/GLLeft"
+				app:layout_constraintTop_toBottomOf="@+id/line2"/>
 
 		</android.support.constraint.ConstraintLayout>
 
 	</com.lin.utils.UnfoldAndZoomScrollView>
 
-</LinearLayout>
+</android.support.constraint.ConstraintLayout>

@@ -68,11 +68,16 @@ public class MainActivity extends AppCompatActivity
 		else
 		{
 			//没有SD卡
+			//自定义风格对话框
 			Dialog dialog = new Dialog (this, R.style.BottomDialog);
+			//获取对话框将要装载的内容
 			View contentView = LayoutInflater.from (this).inflate
 					(R.layout.dialog_no_sdcard_or_no_permission, null);
+
+			//设置主题
 			TextView textView = contentView.findViewById (R.id.exit);
 			textView.setBackgroundResource (Values.getSelector ());
+
 			//没有SD卡就不能用了
 			textView.setOnClickListener (new View.OnClickListener ()
 			{
@@ -81,7 +86,9 @@ public class MainActivity extends AppCompatActivity
 					finish ();
 				}
 			});
+			//装载内容
 			dialog.setContentView (contentView);
+			//调节大小
 			ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
 					contentView.getLayoutParams ();
 			params.width = getResources ().getDisplayMetrics ().widthPixels
@@ -94,9 +101,11 @@ public class MainActivity extends AppCompatActivity
 			dialog.show ();
 		}
 
+		//环形进度条
 		dialog = new Dialog (this, R.style.BottomDialog);
 		View contentView = LayoutInflater.from (this).inflate
 				(R.layout.dialog_progress_bar, null);
+
 		ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
 		progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.getProgress ()));
 
@@ -122,10 +131,25 @@ public class MainActivity extends AppCompatActivity
 				@Override public void run ()
 				{
 					loadAvatarFromServer (); //会去UI主线程排队刷新头像显示
+					//函数内部包含了dialog.cancel ();
 				}
 			}).start ();
 		else
 			dialog.cancel ();
+
+		//如果没有任何笔记就加载欢迎界面
+		if (!hasNote)
+		{
+			TextView textView = findViewById (R.id.textView);
+			textView.setTextColor (getResources ().getColor (Values.getColor ()));
+			textView.setVisibility (View.VISIBLE);
+			findViewById (R.id.recyclerView).setVisibility (View.GONE);
+		}
+		else
+		{
+			findViewById (R.id.textView).setVisibility (View.GONE);
+			findViewById (R.id.recyclerView).setVisibility (View.VISIBLE);
+		}
 	}
 
 	//6.0以上貌似要用户授权读写权限
@@ -134,15 +158,19 @@ public class MainActivity extends AppCompatActivity
 			@NonNull String[] permissions, @NonNull int[] grantResults)
 	{
 		super.onRequestPermissionsResult (requestCode, permissions, grantResults);
+		//授权了权限
 		if (requestCode == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
 			FileHelper.createDir (this);
+			//没有授权权限
 		else if (requestCode == 1 && grantResults[0] == PackageManager.PERMISSION_DENIED)
 		{
 			Dialog dialog = new Dialog (this, R.style.BottomDialog);
 			View contentView = LayoutInflater.from (this).inflate
 					(R.layout.dialog_no_sdcard_or_no_permission, null);
+
 			TextView textView = contentView.findViewById (R.id.exit);
 			textView.setBackgroundResource (Values.getSelector ());
+
 			//没有读写权限就不能用了
 			textView.setOnClickListener (new View.OnClickListener ()
 			{
@@ -190,6 +218,7 @@ public class MainActivity extends AppCompatActivity
 			case Values.REQ_USER_CENTER:
 				switch (resultCode)
 				{
+					//这里包括修改头像，昵称
 					case Values.RES_CHANGE_SOMETHING:
 						//数据已经持久化保存，只需要刷新显示
 						if (Values.isChangeAvatar ())
@@ -204,18 +233,13 @@ public class MainActivity extends AppCompatActivity
 									.setText (user.getName ());
 							Values.setChangeName (false);
 						}
-						if (Values.isChangeSort ())
-						{
-							// FIXME: 2018/3/9 刷新笔记的显示
-							Values.setChangeSort (false);
-						}
 						break;
 					case Values.RES_CHANGE_THEME:
 						//重新加载Activity
 						recreate ();
 						break;
 					case Values.RES_CHANGE_PASSWORD:
-						//退出，转到登录界面
+						//修改密码，转到登录界面
 						String preAccount = user.getAccount ();
 						clearUserInSQLite ();
 						clearUserInMemory ();
@@ -238,16 +262,19 @@ public class MainActivity extends AppCompatActivity
 
 	public void imageViewAvatar (View view)
 	{
+		//有用户进入个人中心
 		if (hasUser)
 		{
 			Intent intent = new Intent (this, UserCenterActivity.class);
 			startActivityForResult (intent, Values.REQ_USER_CENTER);
 		}
 
+		//没有用户进入登录界面
 		else
 		{
 			Intent intent = new Intent (this, SignInActivity.class);
 
+			//读取SQLite里面的记录，如果曾经登录过就加载以前的账号，方便登录
 			helper = SQLiteHelper.getHelper (this);
 			SQLiteDatabase db = helper.getWritableDatabase ();
 			Cursor cursor = db.rawQuery ("select * from user where account = \"0\"",
@@ -358,12 +385,6 @@ public class MainActivity extends AppCompatActivity
 				Values.setProgress (R.drawable.progress_bar_blue);
 		}
 
-		//排序方式
-		if (cursor.getString (cursor.getColumnIndex ("sort")).equals ("0"))
-			Values.setSort (0);
-		else
-			Values.setSort (1);
-
 		cursor.close ();
 		db.close ();
 	}
@@ -424,7 +445,7 @@ public class MainActivity extends AppCompatActivity
 		User.signOut ();
 		hasUser = false;
 		((TextView) findViewById (R.id.textViewName)).setText ("登录了可以上传云哦");
-		findViewById (R.id.fabSync).setVisibility (View.INVISIBLE);
+		findViewById (R.id.fabSync).setVisibility (View.GONE);
 		((ImageView) findViewById (R.id.imageViewAvatar)).setImageResource (R.drawable.ic_avatar);
 	}
 
@@ -537,5 +558,11 @@ public class MainActivity extends AppCompatActivity
 	private void loadNoteFromSQLite ()
 	{
 
+	}
+
+	//新建笔记
+	public void fabNew (View view)
+	{
+		Toast.makeText (this, "新建笔记", Toast.LENGTH_SHORT).show ();
 	}
 }

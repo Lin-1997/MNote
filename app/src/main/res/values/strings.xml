@@ -1,6 +1,6 @@
 <resources>
 	<string name="app_name">MNote</string>
-	<string name="pleaseSignIn">登录了可以上传云哦</string>
+	<string name="pleaseSignIn">登录开启新世界</string>
 	<string name="account">账号</string>
 	<string name="password">密码</string>
 	<string name="signIn">登录</string>
@@ -40,4 +40,5 @@
 	<string name="oldPassword">原密码:6至16位字母数字下划线</string>
 	<string name="newPassword">新密码:6至16位字母数字下划线</string>
 	<string name="nameHint">长度10位以内</string>
+	<string name="noNote">一片贫瘠的土地</string>
 </resources>

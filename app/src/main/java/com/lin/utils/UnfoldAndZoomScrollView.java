@@ -11,6 +11,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+//暂时发现1.0.2版本才可以做到隐藏展开再放大
+//更新的版本不展开隐藏就直接放大
+//implementation 'com.android.support.constraint:constraint-layout:1.0.2'
 public class UnfoldAndZoomScrollView extends NestedScrollView
 {
 	public UnfoldAndZoomScrollView (Context context)
