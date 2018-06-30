@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.lin.bean.User;
+import com.lin.utils.ArcMenu;
 import com.lin.utils.Density;
 import com.lin.utils.FileHelper;
 import com.lin.utils.RequestServes;
@@ -44,9 +45,12 @@ public class MainActivity extends AppCompatActivity
 	private boolean hasNote = false;
 	private Dialog dialog;
 
-	//	final SimpleDateFormat dateFormat1 = new SimpleDateFormat ("yyyy-MM-dd");
-	//	final SimpleDateFormat dateFormat2 = new SimpleDateFormat ("HH:mm:ss");
-	//	final Date date = new Date (System.currentTimeMillis ());
+//	SimpleDateFormat dateFormat1 = new SimpleDateFormat ("yyyy-MM-dd");
+//	SimpleDateFormat dateFormat2 = new SimpleDateFormat ("HH:mm:ss");
+//	Date date = new Date (System.currentTimeMillis ());
+//
+//	String curDate1 = dateFormat1.format (date);
+//	String curDate2 = dateFormat2.format (date);
 
 	//头像
 	//getExternalFilesDir (Environment.DIRECTORY_DCIM);
@@ -56,6 +60,9 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	protected void onCreate (Bundle savedInstanceState)
 	{
+		//判断有没有SD卡
+		checkSdcard ();
+
 		//设置主题要在setContentView之前
 		loadSettingFromSQLite ();
 		setTheme (Values.getTheme ());
@@ -63,45 +70,7 @@ public class MainActivity extends AppCompatActivity
 		super.onCreate (savedInstanceState);
 		setContentView (R.layout.activity_main);
 
-		if (FileHelper.hasSdcard ()) //6.0以上貌似要用户动态授权读写权限
-			FileHelper.verifyStoragePermissions (this);
-		else
-		{
-			//没有SD卡
-			//自定义风格对话框
-			Dialog dialog = new Dialog (this, R.style.BottomDialog);
-			//获取对话框将要装载的内容
-			View contentView = LayoutInflater.from (this).inflate
-					(R.layout.dialog_no_sdcard_or_no_permission, null);
-
-			//设置主题
-			TextView textView = contentView.findViewById (R.id.exit);
-			textView.setBackgroundResource (Values.getSelector ());
-
-			//没有SD卡就不能用了
-			textView.setOnClickListener (new View.OnClickListener ()
-			{
-				@Override public void onClick (View v)
-				{
-					finish ();
-				}
-			});
-			//装载内容
-			dialog.setContentView (contentView);
-			//调节大小
-			ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
-					contentView.getLayoutParams ();
-			params.width = getResources ().getDisplayMetrics ().widthPixels
-					- Density.dp2px (this, 16f);
-			params.bottomMargin = Density.dp2px (this, 8f);
-			contentView.setLayoutParams (params);
-			dialog.getWindow ().setGravity (Gravity.CENTER);
-			dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
-			dialog.setCancelable (false);//禁止外部点击关闭
-			dialog.show ();
-		}
-
-		//环形进度条
+		//读取数据的环形进度条
 		dialog = new Dialog (this, R.style.BottomDialog);
 		View contentView = LayoutInflater.from (this).inflate
 				(R.layout.dialog_progress_bar, null);
@@ -122,6 +91,7 @@ public class MainActivity extends AppCompatActivity
 
 		//读取各种数据
 		loadUserFromSQLite ();
+		// FIXME: 2018/6/30 读Note
 		loadNoteFromSQLite ();
 		//如果发现有用户，这个用户是有头像的，文件又没有头像就去服务器看一看
 		//说不定是缓存被清空了
@@ -150,6 +120,8 @@ public class MainActivity extends AppCompatActivity
 			findViewById (R.id.textView).setVisibility (View.GONE);
 			findViewById (R.id.recyclerView).setVisibility (View.VISIBLE);
 		}
+
+		initArcMenu ();
 	}
 
 	//6.0以上貌似要用户授权读写权限
@@ -209,7 +181,6 @@ public class MainActivity extends AppCompatActivity
 							((ImageView) findViewById (R.id.imageViewAvatar))
 									.setImageBitmap (user.getAvatar ());
 						((TextView) findViewById (R.id.textViewName)).setText (user.getName ());
-						findViewById (R.id.fabSync).setVisibility (View.VISIBLE);
 						Intent intent = new Intent (this, UserCenterActivity.class);
 						startActivityForResult (intent, Values.REQ_USER_CENTER);
 						break;
@@ -260,38 +231,44 @@ public class MainActivity extends AppCompatActivity
 		super.onActivityResult (requestCode, resultCode, data);
 	}
 
-	public void imageViewAvatar (View view)
+	private void checkSdcard ()
 	{
-		//有用户进入个人中心
-		if (hasUser)
-		{
-			Intent intent = new Intent (this, UserCenterActivity.class);
-			startActivityForResult (intent, Values.REQ_USER_CENTER);
-		}
-
-		//没有用户进入登录界面
+		if (FileHelper.hasSdcard ()) //6.0以上貌似要用户动态授权读写权限
+			FileHelper.verifyStoragePermissions (this);
 		else
 		{
-			Intent intent = new Intent (this, SignInActivity.class);
+			//没有SD卡
+			//自定义风格对话框
+			Dialog dialog = new Dialog (this, R.style.BottomDialog);
+			//获取对话框将要装载的内容
+			View contentView = LayoutInflater.from (this).inflate
+					(R.layout.dialog_no_sdcard_or_no_permission, null);
 
-			//读取SQLite里面的记录，如果曾经登录过就加载以前的账号，方便登录
-			helper = SQLiteHelper.getHelper (this);
-			SQLiteDatabase db = helper.getWritableDatabase ();
-			Cursor cursor = db.rawQuery ("select * from user where account = \"0\"",
-					null);
-			if (cursor.getCount () == 1)
+			//设置主题
+			TextView textView = contentView.findViewById (R.id.exit);
+			textView.setBackgroundResource (Values.getSelector ());
+
+			//没有SD卡就不能用了
+			textView.setOnClickListener (new View.OnClickListener ()
 			{
-				//cursor默认在第一个之前的位置
-				cursor.moveToNext ();
-				intent.putExtra ("preAccount", cursor.getString (
-						cursor.getColumnIndex ("name")));
-			}
-			else
-				intent.putExtra ("preAccount", "");
-			cursor.close ();
-			db.close ();
-
-			startActivityForResult (intent, Values.REQ_SIGN_IN);
+				@Override public void onClick (View v)
+				{
+					finish ();
+				}
+			});
+			//装载内容
+			dialog.setContentView (contentView);
+			//调节大小
+			ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
+					contentView.getLayoutParams ();
+			params.width = getResources ().getDisplayMetrics ().widthPixels
+					- Density.dp2px (this, 16f);
+			params.bottomMargin = Density.dp2px (this, 8f);
+			contentView.setLayoutParams (params);
+			dialog.getWindow ().setGravity (Gravity.CENTER);
+			dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			dialog.setCancelable (false);//禁止外部点击关闭
+			dialog.show ();
 		}
 	}
 
@@ -421,7 +398,23 @@ public class MainActivity extends AppCompatActivity
 		hasUser = true;
 		user.setHasAvatar (avatar.equals ("1"));
 		((TextView) findViewById (R.id.textViewName)).setText (user.getName ());
-		findViewById (R.id.fabSync).setVisibility (View.VISIBLE);
+	}
+
+	/**
+	 * 读取文件头像
+	 */
+	private boolean loadAvatarFromFile ()
+	{
+		File file = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
+				"avatar.jpg");
+		if (file.exists ())
+		{
+			writeAvatarToMemory (BitmapFactory.decodeFile (file.getPath ()));
+			((ImageView) findViewById (R.id.imageViewAvatar))
+					.setImageBitmap (user.getAvatar ());
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -444,26 +437,34 @@ public class MainActivity extends AppCompatActivity
 	{
 		User.signOut ();
 		hasUser = false;
-		((TextView) findViewById (R.id.textViewName)).setText ("登录了可以上传云哦");
-		findViewById (R.id.fabSync).setVisibility (View.GONE);
+		((TextView) findViewById (R.id.textViewName)).setText ("登录开启新世界");
 		((ImageView) findViewById (R.id.imageViewAvatar)).setImageResource (R.drawable.ic_avatar);
 	}
 
-	/**
-	 * 读取文件头像
-	 */
-	private boolean loadAvatarFromFile ()
+	private void initArcMenu ()
 	{
-		File file = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
-				"avatar.jpg");
-		if (file.exists ())
+		ArcMenu arcMenu = findViewById (R.id.arcMenu);
+		//设置主菜单按钮
+		arcMenu.setMenu (findViewById (R.id.fabMenu));
+		//设置子菜单点击事件
+		arcMenu.setOnMenuItemClickListener (new ArcMenu.onMenuItemClickListener ()
 		{
-			writeAvatarToMemory (BitmapFactory.decodeFile (file.getPath ()));
-			((ImageView) findViewById (R.id.imageViewAvatar))
-					.setImageBitmap (user.getAvatar ());
-			return true;
-		}
-		return false;
+			@Override public void onClick (View view)
+			{
+				switch (view.getId ())
+				{
+					case R.id.fabUpload:
+						fabUpload (view);
+						break;
+					case R.id.fabCreate:
+						fabCreate (view);
+						break;
+					case R.id.fabDownload:
+						fabDownload (view);
+						break;
+				}
+			}
+		});
 	}
 
 	/**
@@ -560,9 +561,57 @@ public class MainActivity extends AppCompatActivity
 
 	}
 
+	//上传
+	private void fabUpload (View view)
+	{
+		Toast.makeText (this, "上传", Toast.LENGTH_SHORT).show ();
+	}
+
 	//新建笔记
-	public void fabNew (View view)
+	public void fabCreate (View view)
 	{
 		Toast.makeText (this, "新建笔记", Toast.LENGTH_SHORT).show ();
+	}
+
+	//下载
+	private void fabDownload (View view)
+	{
+		Toast.makeText (this, "下载", Toast.LENGTH_SHORT).show ();
+	}
+
+
+	public void imageViewAvatar (View view)
+	{
+		//有用户进入个人中心
+		if (hasUser)
+		{
+			Intent intent = new Intent (this, UserCenterActivity.class);
+			startActivityForResult (intent, Values.REQ_USER_CENTER);
+		}
+
+		//没有用户进入登录界面
+		else
+		{
+			Intent intent = new Intent (this, SignInActivity.class);
+
+			//读取SQLite里面的记录，如果曾经登录过就加载以前的账号，方便登录
+			helper = SQLiteHelper.getHelper (this);
+			SQLiteDatabase db = helper.getWritableDatabase ();
+			Cursor cursor = db.rawQuery ("select * from user where account = \"0\"",
+					null);
+			if (cursor.getCount () == 1)
+			{
+				//cursor默认在第一个之前的位置
+				cursor.moveToNext ();
+				intent.putExtra ("preAccount", cursor.getString (
+						cursor.getColumnIndex ("name")));
+			}
+			else
+				intent.putExtra ("preAccount", "");
+			cursor.close ();
+			db.close ();
+
+			startActivityForResult (intent, Values.REQ_SIGN_IN);
+		}
 	}
 }
