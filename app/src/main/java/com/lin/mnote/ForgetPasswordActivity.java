@@ -7,7 +7,6 @@ import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -17,9 +16,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.lin.utils.Density;
+import com.lin.utils.DialogToast;
 import com.lin.utils.EditTextClear;
 import com.lin.utils.NetworkDetector;
 import com.lin.utils.RequestServes;
@@ -52,7 +51,7 @@ public class ForgetPasswordActivity extends AppCompatActivity
 		setContentView (R.layout.activity_forget_password);
 
 		Toolbar toolbar = findViewById (R.id.toolbar);
-		toolbar.setBackgroundResource (Values.getColor ());
+		toolbar.setBackgroundResource (Values.COLOR);
 		setSupportActionBar (toolbar);
 		getSupportActionBar ().setDisplayHomeAsUpEnabled (true);
 
@@ -101,14 +100,12 @@ public class ForgetPasswordActivity extends AppCompatActivity
 										switch (response.body ())
 										{
 											case ":-1":
-												Log.d ("忘记密码", "失败");
-												Toast.makeText (ForgetPasswordActivity.this,
-														"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+												DialogToast.showDialogToast (ForgetPasswordActivity.this,
+														"数据被外星人带走了");
 												break;
 											case ":1":
-												Log.d ("忘记密码", "成功");
-												Toast.makeText (ForgetPasswordActivity.this,
-														"改好了", Toast.LENGTH_SHORT).show ();
+												DialogToast.showDialogToast (ForgetPasswordActivity.this,
+														"改好了");
 												Intent intent = new Intent ();
 												intent.putExtra ("account", account);
 												setResult (Values.RES_FORGET_PASSWORD, intent);
@@ -119,9 +116,8 @@ public class ForgetPasswordActivity extends AppCompatActivity
 
 									@Override public void onFailure (Call<String> call, Throwable t)
 									{
-										Log.d ("忘记密码", t.toString ());
-										Toast.makeText (ForgetPasswordActivity.this,
-												"服务器在维护啦", Toast.LENGTH_SHORT).show ();
+										DialogToast.showDialogToast (ForgetPasswordActivity.this,
+												"服务器在维护啦");
 									}
 								});
 							}
@@ -131,18 +127,14 @@ public class ForgetPasswordActivity extends AppCompatActivity
 					//获取验证码成功
 					{
 						boolean isSmart = (boolean) data;
-						if (isSmart)
-							Log.d ("ssss", "isSmart");
-						else
-							Log.d ("ssss", "notSmart");
 						getNonce = true;
 						runOnUiThread (new Runnable ()
 						{
 							@Override
 							public void run ()
 							{
-								Toast.makeText (ForgetPasswordActivity.this,
-										"验证码正在飞来", Toast.LENGTH_SHORT).show ();
+								DialogToast.showDialogToast (ForgetPasswordActivity.this,
+										"验证码正在飞来");
 							}
 						});
 					}
@@ -152,7 +144,6 @@ public class ForgetPasswordActivity extends AppCompatActivity
 					((Throwable) data).printStackTrace ();
 					Throwable throwable = (Throwable) data;
 					throwable.printStackTrace ();
-					Log.d ("ssss", throwable.toString ());
 					try
 					{
 						JSONObject obj = new JSONObject (throwable.getMessage ());
@@ -165,9 +156,8 @@ public class ForgetPasswordActivity extends AppCompatActivity
 									@Override
 									public void run ()
 									{
-										Toast.makeText (ForgetPasswordActivity.this,
-												"获取验证码太多次啦",
-												Toast.LENGTH_SHORT).show ();
+										DialogToast.showDialogToast (ForgetPasswordActivity.this,
+												"获取验证码太多次啦");
 									}
 								});
 							case 468:
@@ -177,8 +167,8 @@ public class ForgetPasswordActivity extends AppCompatActivity
 									@Override
 									public void run ()
 									{
-										Toast.makeText (ForgetPasswordActivity.this,
-												"验证码错误", Toast.LENGTH_SHORT).show ();
+										DialogToast.showDialogToast (ForgetPasswordActivity.this,
+												"验证码错误");
 									}
 								});
 								break;
@@ -188,8 +178,8 @@ public class ForgetPasswordActivity extends AppCompatActivity
 									@Override
 									public void run ()
 									{
-										Toast.makeText (ForgetPasswordActivity.this,
-												"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+										DialogToast.showDialogToast (ForgetPasswordActivity.this,
+												"数据被外星人带走了");
 									}
 								});
 						}
@@ -218,9 +208,9 @@ public class ForgetPasswordActivity extends AppCompatActivity
 	private void loadView ()
 	{
 		((TextView) findViewById (R.id.textViewGetNonce))
-				.setTextColor (getResources ().getColor (Values.getColor ()));
+				.setTextColor (getResources ().getColor (Values.COLOR));
 		findViewById (R.id.buttonChangePassword)
-				.setBackgroundResource (Values.getBackground ());
+				.setBackgroundResource (Values.BACKGROUND);
 	}
 
 	public void textViewGetNonce (View view)
@@ -228,16 +218,14 @@ public class ForgetPasswordActivity extends AppCompatActivity
 		boolean networkState = NetworkDetector.detect (this);
 		if (!networkState)
 		{
-			Toast.makeText (this, "网络开小差了",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "网络开小差了");
 			return;
 		}
 
 		account = ((TextView) findViewById (R.id.editTextAccount)).getText ().toString ();
 		if (TextUtils.isEmpty (account) || !Pattern.matches (Values.accountRegex, account))
 		{
-			Toast.makeText (this, "这显然是个假号码",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "这显然是个假号码");
 			return;
 		}
 
@@ -257,17 +245,14 @@ public class ForgetPasswordActivity extends AppCompatActivity
 						switch (response.body ())
 						{
 							case ":-1":
-								Log.d ("查询账号", "失败");
-								Toast.makeText (ForgetPasswordActivity.this,
-										"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+								DialogToast.showDialogToast (ForgetPasswordActivity.this,
+										"数据被外星人带走了");
 								break;
 							case ":0":
-								Log.d ("查询账号", "不存在");
-								Toast.makeText (ForgetPasswordActivity.this,
-										"这号码还没注册过呢", Toast.LENGTH_SHORT).show ();
+								DialogToast.showDialogToast (ForgetPasswordActivity.this,
+										"这号码还没注册过呢");
 								break;
 							default:
-								// FIXME: 2018/6/6 获取验证码后改一下textViewGetNonce内容
 								SMSSDK.getVerificationCode ("86", account);
 						}
 						call.cancel ();
@@ -276,9 +261,8 @@ public class ForgetPasswordActivity extends AppCompatActivity
 					//超时未回应也会进入这个函数
 					@Override public void onFailure (Call<String> call, Throwable t)
 					{
-						Log.d ("查询账号", t.toString ());
-						Toast.makeText (ForgetPasswordActivity.this,
-								"服务器在维护啦", Toast.LENGTH_SHORT).show ();
+						DialogToast.showDialogToast (ForgetPasswordActivity.this,
+								"服务器在维护啦");
 						call.cancel ();
 					}
 				});
@@ -292,53 +276,52 @@ public class ForgetPasswordActivity extends AppCompatActivity
 		boolean networkState = NetworkDetector.detect (this);
 		if (!networkState)
 		{
-			Toast.makeText (this, "网络开小差了",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "网络开小差了");
 			return;
 		}
 
 		if (!getNonce || !account.equals (((TextView) findViewById
 				(R.id.editTextAccount)).getText ().toString ()))
 		{
-			Toast.makeText (this, "请获取验证码",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "请获取验证码");
 			return;
 		}
 
 		String nonce = ((TextView) findViewById (R.id.editTextNonce)).getText ().toString ();
 		if (TextUtils.isEmpty (nonce) || !Pattern.matches (Values.nonceRegex, nonce))
 		{
-			Toast.makeText (this, "这显然是个假验证码",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "这显然是个假验证码");
 			return;
 		}
 
 		password = ((TextView) findViewById (R.id.editTextPassword)).getText ().toString ();
 		if (TextUtils.isEmpty (password) || !Pattern.matches (Values.passwordRegex, password))
 		{
-			Toast.makeText (this, "这显然不是好的新密码",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "这显然不是好的新密码");
 			return;
 		}
 
-		Log.d ("提交验证码验证", account + "," + nonce);
 		SMSSDK.submitVerificationCode ("86", account, nonce);
 
-		dialog = new Dialog (this, R.style.BottomDialog);
-		View contentView = LayoutInflater.from (this).inflate
-				(R.layout.dialog_progress_bar, null);
-		ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
-		progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.getProgress ()));
+		if (dialog == null)
+		{
+			dialog = new Dialog (this, R.style.BottomDialog);
+			View contentView = LayoutInflater.from (this).inflate
+					(R.layout.dialog_progress_bar, null);
+			ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
+			progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.PROGRESS));
 
-		dialog.setContentView (contentView);
-		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
-				contentView.getLayoutParams ();
-		params.width = getResources ().getDisplayMetrics ().widthPixels
-				- Density.dp2px (this, 16f);
-		params.bottomMargin = Density.dp2px (this, 8f);
-		contentView.setLayoutParams (params);
-		dialog.getWindow ().setGravity (Gravity.CENTER);
-		dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			dialog.setContentView (contentView);
+			ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
+					contentView.getLayoutParams ();
+			params.width = getResources ().getDisplayMetrics ().widthPixels
+					- Density.dp2px (this, 16f);
+			params.bottomMargin = Density.dp2px (this, 8f);
+			contentView.setLayoutParams (params);
+			dialog.getWindow ().setGravity (Gravity.CENTER);
+			dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			dialog.setCancelable (false);
+		}
 		dialog.show ();
 	}
 }

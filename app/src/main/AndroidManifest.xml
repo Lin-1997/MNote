@@ -24,13 +24,15 @@
 				<category android:name="android.intent.category.LAUNCHER"/>
 			</intent-filter>
 		</activity>
-		<activity android:name=".SignInActivity">
+		<activity android:name=".ContentActivity">
 		</activity>
-		<activity android:name=".UserCenterActivity">
+		<activity android:name=".ForgetPasswordActivity">
+		</activity>
+		<activity android:name=".SignInActivity">
 		</activity>
 		<activity android:name=".SignUpActivity">
 		</activity>
-		<activity android:name=".ForgetPasswordActivity">
+		<activity android:name=".UserCenterActivity">
 		</activity>
 	</application>
 

@@ -5,6 +5,7 @@ import java.util.Map;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.Multipart;
@@ -52,4 +53,11 @@ public interface RequestServes
 	@FormUrlEncoded
 	Call<String> forgetPassword (@Field ("account") String account,
 			@Field ("password") String password);
+
+	@POST ("/note/upload")
+	Call<String> upload (@Body RequestBody jsonBody);
+
+	@POST ("/note/download")
+	@FormUrlEncoded
+	Call<String> download (@Field ("account") String account);
 }

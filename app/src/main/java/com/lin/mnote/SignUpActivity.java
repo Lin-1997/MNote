@@ -7,7 +7,6 @@ import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -15,9 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.lin.utils.Density;
+import com.lin.utils.DialogToast;
 import com.lin.utils.NetworkDetector;
 import com.lin.utils.RequestServes;
 import com.lin.utils.RetrofitHelper;
@@ -38,9 +37,10 @@ import retrofit2.Retrofit;
 
 public class SignUpActivity extends AppCompatActivity
 {
-	private Dialog dialog;
 	private String account, password;
 	private boolean getNonce = false;
+	private Dialog dialog;
+	private Dialog dialogProgressBar;
 
 	@Override
 	protected void onCreate (Bundle savedInstanceState)
@@ -49,7 +49,7 @@ public class SignUpActivity extends AppCompatActivity
 		setContentView (R.layout.activity_sign_up);
 
 		Toolbar toolbar = findViewById (R.id.toolbar);
-		toolbar.setBackgroundResource (Values.getColor ());
+		toolbar.setBackgroundResource (Values.COLOR);
 		setSupportActionBar (toolbar);
 		getSupportActionBar ().setDisplayHomeAsUpEnabled (true);
 
@@ -71,7 +71,6 @@ public class SignUpActivity extends AppCompatActivity
 				{
 					if (event == SMSSDK.EVENT_SUBMIT_VERIFICATION_CODE) //回调完成
 					{
-						dialog.cancel ();
 						//提交验证码成功
 						new Thread (new Runnable ()
 						{
@@ -89,17 +88,17 @@ public class SignUpActivity extends AppCompatActivity
 										switch (response.body ())
 										{
 											case ":-1":
-												Log.d ("注册", "失败");
-												Toast.makeText (SignUpActivity.this,
-														"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+												dialogProgressBar.cancel ();
+												DialogToast.showDialogToast (SignUpActivity.this,
+														"数据被外星人带走了");
 												break;
 											case ":1":
-												Log.d ("注册", "成功");
-												Toast.makeText (SignUpActivity.this,
-														"注册成功", Toast.LENGTH_SHORT).show ();
 												Intent intent = new Intent ();
 												intent.putExtra ("account", account);
 												setResult (Values.RES_SIGN_UP, intent);
+												dialogProgressBar.cancel ();
+												DialogToast.showDialogToast (SignUpActivity.this,
+														"注册成功");
 												finish ();
 												break;
 										}
@@ -107,9 +106,9 @@ public class SignUpActivity extends AppCompatActivity
 
 									@Override public void onFailure (Call<String> call, Throwable t)
 									{
-										Log.d ("注册失败", t.toString ());
-										Toast.makeText (SignUpActivity.this,
-												"服务器在维护啦", Toast.LENGTH_SHORT).show ();
+										dialogProgressBar.cancel ();
+										DialogToast.showDialogToast (SignUpActivity.this,
+												"服务器在维护啦");
 									}
 								});
 							}
@@ -119,18 +118,14 @@ public class SignUpActivity extends AppCompatActivity
 					//获取验证码成功
 					{
 						boolean isSmart = (boolean) data;
-						if (isSmart)
-							Log.d ("ssss", "isSmart");
-						else
-							Log.d ("ssss", "notSmart");
 						getNonce = true;
 						runOnUiThread (new Runnable ()
 						{
 							@Override
 							public void run ()
 							{
-								Toast.makeText (SignUpActivity.this,
-										"验证码正在飞来", Toast.LENGTH_SHORT).show ();
+								DialogToast.showDialogToast (SignUpActivity.this,
+										"验证码正在飞来");
 							}
 						});
 					}
@@ -140,7 +135,6 @@ public class SignUpActivity extends AppCompatActivity
 					((Throwable) data).printStackTrace ();
 					Throwable throwable = (Throwable) data;
 					throwable.printStackTrace ();
-					Log.d ("ssss", throwable.toString ());
 					try
 					{
 						JSONObject obj = new JSONObject (throwable.getMessage ());
@@ -153,31 +147,32 @@ public class SignUpActivity extends AppCompatActivity
 									@Override
 									public void run ()
 									{
-										Toast.makeText (SignUpActivity.this,
-												"获取验证码太多次啦",
-												Toast.LENGTH_SHORT).show ();
+										DialogToast.showDialogToast (SignUpActivity.this,
+												"获取验证码太多次啦");
 									}
 								});
 							case 468:
-								dialog.cancel ();
+								dialogProgressBar.cancel ();
 								runOnUiThread (new Runnable ()
 								{
 									@Override
 									public void run ()
 									{
-										Toast.makeText (SignUpActivity.this,
-												"验证码错误", Toast.LENGTH_SHORT).show ();
+										DialogToast.showDialogToast (SignUpActivity.this,
+												"验证码错误");
 									}
 								});
 								break;
-							default:
+							default: //这个default没遇到过，不知道什么情况
+								if (dialogProgressBar.isShowing ())
+									dialogProgressBar.cancel ();
 								runOnUiThread (new Runnable ()
 								{
 									@Override
 									public void run ()
 									{
-										Toast.makeText (SignUpActivity.this,
-												"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+										DialogToast.showDialogToast (SignUpActivity.this,
+												"数据被外星人带走了");
 									}
 								});
 						}
@@ -206,9 +201,9 @@ public class SignUpActivity extends AppCompatActivity
 	private void loadView ()
 	{
 		((TextView) findViewById (R.id.textViewGetNonce))
-				.setTextColor (getResources ().getColor (Values.getColor ()));
+				.setTextColor (getResources ().getColor (Values.COLOR));
 		findViewById (R.id.buttonSignUp)
-				.setBackgroundResource (Values.getBackground ());
+				.setBackgroundResource (Values.BACKGROUND);
 	}
 
 	public void textViewGetNonce (View view)
@@ -216,16 +211,14 @@ public class SignUpActivity extends AppCompatActivity
 		boolean networkState = NetworkDetector.detect (this);
 		if (!networkState)
 		{
-			Toast.makeText (this, "网络开小差了",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "网络开小差了");
 			return;
 		}
 
 		account = ((TextView) findViewById (R.id.editTextAccount)).getText ().toString ();
 		if (TextUtils.isEmpty (account) || !Pattern.matches (Values.accountRegex, account))
 		{
-			Toast.makeText (this, "这显然是个假号码",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "这显然是个假号码");
 			return;
 		}
 
@@ -245,32 +238,32 @@ public class SignUpActivity extends AppCompatActivity
 						switch (response.body ())
 						{
 							case ":-1":
-								Log.d ("查询账号", "失败");
-								Toast.makeText (SignUpActivity.this,
-										"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+								DialogToast.showDialogToast (SignUpActivity.this,
+										"数据被外星人带走了");
 								break;
 							case ":1":
-								Log.d ("查询账号", "已注册");
-								dialog = new Dialog (SignUpActivity.this, R.style.BottomDialog);
-								View contentView = LayoutInflater.from (SignUpActivity.this)
-										.inflate (R.layout.dialog_content_account_occupied, null);
+								if (dialog == null)
+								{
+									dialog = new Dialog (SignUpActivity.this, R.style.BottomDialog);
+									View contentView = LayoutInflater.from (SignUpActivity.this)
+											.inflate (R.layout.dialog_content_account_occupied, null);
 
-								contentView.findViewById (R.id.gotoSignIn)
-										.setBackgroundResource (Values.getSelector ());
+									contentView.findViewById (R.id.gotoSignIn)
+											.setBackgroundResource (Values.SELECTOR);
 
-								dialog.setContentView (contentView);
-								ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
-										contentView.getLayoutParams ();
-								params.width = getResources ().getDisplayMetrics ().widthPixels
-										- Density.dp2px (SignUpActivity.this, 16f);
-								params.bottomMargin = Density.dp2px (SignUpActivity.this, 8f);
-								contentView.setLayoutParams (params);
-								dialog.getWindow ().setGravity (Gravity.BOTTOM);
-								dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+									dialog.setContentView (contentView);
+									ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
+											contentView.getLayoutParams ();
+									params.width = getResources ().getDisplayMetrics ().widthPixels
+											- Density.dp2px (SignUpActivity.this, 16f);
+									params.bottomMargin = Density.dp2px (SignUpActivity.this, 8f);
+									contentView.setLayoutParams (params);
+									dialog.getWindow ().setGravity (Gravity.BOTTOM);
+									dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+								}
 								dialog.show ();
 								break;
 							case ":0":
-								// FIXME: 2018/6/6 获取验证码后改一下textViewGetNonce内容
 								SMSSDK.getVerificationCode ("86", account);
 						}
 						call.cancel ();
@@ -279,9 +272,8 @@ public class SignUpActivity extends AppCompatActivity
 					//超时未回应也会进入这个函数
 					@Override public void onFailure (Call<String> call, Throwable t)
 					{
-						Log.d ("查询账号", t.toString ());
-						Toast.makeText (SignUpActivity.this,
-								"服务器在维护啦", Toast.LENGTH_SHORT).show ();
+						DialogToast.showDialogToast (SignUpActivity.this,
+								"服务器在维护啦");
 						call.cancel ();
 					}
 				});
@@ -295,54 +287,53 @@ public class SignUpActivity extends AppCompatActivity
 		boolean networkState = NetworkDetector.detect (this);
 		if (!networkState)
 		{
-			Toast.makeText (this, "网络开小差了",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "网络开小差了");
 			return;
 		}
 
 		if (!getNonce || !account.equals (((TextView) findViewById
 				(R.id.editTextAccount)).getText ().toString ()))
 		{
-			Toast.makeText (this, "请获取验证码",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "请获取验证码");
 			return;
 		}
 
 		String nonce = ((TextView) findViewById (R.id.editTextNonce)).getText ().toString ();
 		if (TextUtils.isEmpty (nonce) || !Pattern.matches (Values.nonceRegex, nonce))
 		{
-			Toast.makeText (this, "这显然是个假验证码",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "这显然是个假验证码");
 			return;
 		}
 
 		password = ((TextView) findViewById (R.id.editTextPassword)).getText ().toString ();
 		if (TextUtils.isEmpty (password) || !Pattern.matches (Values.passwordRegex, password))
 		{
-			Toast.makeText (this, "这显然不是好的新密码",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "这显然不是好的新密码");
 			return;
 		}
 
-		Log.d ("提交验证码验证", account + "," + nonce);
 		SMSSDK.submitVerificationCode ("86", account, nonce);
 
-		dialog = new Dialog (this, R.style.BottomDialog);
-		View contentView = LayoutInflater.from (this).inflate
-				(R.layout.dialog_progress_bar, null);
-		ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
-		progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.getProgress ()));
+		if (dialogProgressBar == null)
+		{
+			dialogProgressBar = new Dialog (this, R.style.BottomDialog);
+			View contentView = LayoutInflater.from (this).inflate
+					(R.layout.dialog_progress_bar, null);
+			ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
+			progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.PROGRESS));
 
-		dialog.setContentView (contentView);
-		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
-				contentView.getLayoutParams ();
-		params.width = getResources ().getDisplayMetrics ().widthPixels
-				- Density.dp2px (this, 16f);
-		params.bottomMargin = Density.dp2px (this, 8f);
-		contentView.setLayoutParams (params);
-		dialog.getWindow ().setGravity (Gravity.CENTER);
-		dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
-		dialog.show ();
+			dialogProgressBar.setContentView (contentView);
+			ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
+					contentView.getLayoutParams ();
+			params.width = getResources ().getDisplayMetrics ().widthPixels
+					- Density.dp2px (this, 16f);
+			params.bottomMargin = Density.dp2px (this, 8f);
+			contentView.setLayoutParams (params);
+			dialogProgressBar.getWindow ().setGravity (Gravity.CENTER);
+			dialogProgressBar.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			dialogProgressBar.setCancelable (false);
+		}
+		dialogProgressBar.show ();
 	}
 
 	public void gotoSignIn (View view)

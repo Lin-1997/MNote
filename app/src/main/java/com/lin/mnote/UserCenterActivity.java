@@ -3,6 +3,7 @@ package com.lin.mnote;
 import android.app.Dialog;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -14,7 +15,6 @@ import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -25,10 +25,10 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.lin.bean.User;
 import com.lin.utils.Density;
+import com.lin.utils.DialogToast;
 import com.lin.utils.EditTextClear;
 import com.lin.utils.FileHelper;
 import com.lin.utils.NetworkDetector;
@@ -55,6 +55,7 @@ public class UserCenterActivity extends AppCompatActivity
 	private SQLiteHelper helper;
 	private User user = User.getUser ();
 	private Dialog dialog;
+	private Dialog dialogProgressBar;
 
 	//系统自带相机的存储地址
 	Uri imageUri = Uri.fromFile (new File (Environment.getExternalStoragePublicDirectory
@@ -67,7 +68,7 @@ public class UserCenterActivity extends AppCompatActivity
 		setContentView (R.layout.activity_user_center);
 
 		Toolbar toolbar = findViewById (R.id.toolbar);
-		toolbar.setBackgroundResource (Values.getColor ());
+		toolbar.setBackgroundResource (Values.COLOR);
 		setSupportActionBar (toolbar);
 		getSupportActionBar ().setDisplayHomeAsUpEnabled (true);
 
@@ -97,15 +98,15 @@ public class UserCenterActivity extends AppCompatActivity
 		switch (requestCode)
 		{
 			case Values.REQ_ACTION_IMAGE_CAPTURE: //拍照
-				if (resultCode != 0)
+				if (resultCode == RESULT_OK)
 					startPhotoZoom (imageUri);
 				break;
 			case Values.REQ_ACTION_PICK: //相册
-				if (resultCode != 0)
-					startPhotoZoom (imageUri);
+				if (resultCode == RESULT_OK)
+					startPhotoZoom (data.getData ());
 				break;
 			case Values.REQ_ACTION_CROP: //裁剪
-				if (resultCode != 0 && imageUri != null)
+				if (resultCode == RESULT_OK && imageUri != null)
 				{
 					try
 					{
@@ -128,16 +129,16 @@ public class UserCenterActivity extends AppCompatActivity
 		if (user.getAvatar () != null)
 			((ImageView) findViewById (R.id.imageViewAvatar)).setImageBitmap (user.getAvatar ());
 		View view = findViewById (R.id.line1);
-		view.setBackgroundResource (Values.getColor ());
+		view.setBackgroundResource (Values.COLOR);
 		view = findViewById (R.id.line2);
-		view.setBackgroundResource (Values.getColor ());
+		view.setBackgroundResource (Values.COLOR);
 		RelativeLayout layout = findViewById (R.id.changeColor);
-		layout.setBackgroundResource (Values.getSelector ());
+		layout.setBackgroundResource (Values.SELECTOR);
 		layout = findViewById (R.id.changeName);
-		layout.setBackgroundResource (Values.getSelector ());
+		layout.setBackgroundResource (Values.SELECTOR);
 		layout = findViewById (R.id.changePassword);
-		layout.setBackgroundResource (Values.getSelector ());
-		findViewById (R.id.buttonSignOut).setBackgroundResource (Values.getBackground ());
+		layout.setBackgroundResource (Values.SELECTOR);
+		findViewById (R.id.buttonSignOut).setBackgroundResource (Values.BACKGROUND);
 	}
 
 	public void changeAvatar (View view)
@@ -145,8 +146,7 @@ public class UserCenterActivity extends AppCompatActivity
 		boolean networkState = NetworkDetector.detect (this);
 		if (!networkState)
 		{
-			Toast.makeText (this, "网络开小差了",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "网络开小差了");
 			return;
 		}
 
@@ -155,9 +155,9 @@ public class UserCenterActivity extends AppCompatActivity
 				.inflate (R.layout.dialog_content_avatar, null);
 
 		TextView textView = contentView.findViewById (R.id.avatarCamera);
-		textView.setBackgroundResource (Values.getSelector ());
+		textView.setBackgroundResource (Values.SELECTOR);
 		textView = contentView.findViewById (R.id.avatarGallery);
-		textView.setBackgroundResource (Values.getSelector ());
+		textView.setBackgroundResource (Values.SELECTOR);
 
 		dialog.setContentView (contentView);
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
@@ -173,6 +173,7 @@ public class UserCenterActivity extends AppCompatActivity
 
 	public void changeAvatarWith (View view)
 	{
+		dialog.cancel ();
 		switch (view.getId ())
 		{
 			case R.id.avatarCamera: //拍照
@@ -181,11 +182,7 @@ public class UserCenterActivity extends AppCompatActivity
 			case R.id.avatarGallery: //相册
 				avatarGallery ();
 				break;
-			default:
-				dialog.cancel ();
-				return;
 		}
-		dialog.cancel ();
 	}
 
 	private void avatarCamera ()
@@ -226,22 +223,26 @@ public class UserCenterActivity extends AppCompatActivity
 
 	private void setPicToView (final Bitmap avatar)
 	{
-		final Dialog dialogProgressBar = new Dialog (this, R.style.BottomDialog);
-		View contentView = LayoutInflater.from (this).inflate
-				(R.layout.dialog_progress_bar, null);
+		if (dialogProgressBar == null)
+		{
+			dialogProgressBar = new Dialog (this, R.style.BottomDialog);
+			View contentView = LayoutInflater.from (this).inflate
+					(R.layout.dialog_progress_bar, null);
 
-		ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
-		progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.getProgress ()));
+			ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
+			progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.PROGRESS));
 
-		dialogProgressBar.setContentView (contentView);
-		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
-				contentView.getLayoutParams ();
-		params.width = getResources ().getDisplayMetrics ().widthPixels
-				- Density.dp2px (this, 16f);
-		params.bottomMargin = Density.dp2px (this, 8f);
-		contentView.setLayoutParams (params);
-		dialogProgressBar.getWindow ().setGravity (Gravity.CENTER);
-		dialogProgressBar.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			dialogProgressBar.setContentView (contentView);
+			ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
+					contentView.getLayoutParams ();
+			params.width = getResources ().getDisplayMetrics ().widthPixels
+					- Density.dp2px (this, 16f);
+			params.bottomMargin = Density.dp2px (this, 8f);
+			contentView.setLayoutParams (params);
+			dialogProgressBar.getWindow ().setGravity (Gravity.CENTER);
+			dialogProgressBar.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			dialogProgressBar.setCancelable (false);
+		}
 		dialogProgressBar.show ();
 
 		//新建一个线程去访问服务器
@@ -273,33 +274,30 @@ public class UserCenterActivity extends AppCompatActivity
 						switch (response.body ())
 						{
 							case ":-1":
-								Log.d ("修改头像", "失败");
-								Toast.makeText (UserCenterActivity.this,
-										"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+								dialogProgressBar.cancel ();
+								DialogToast.showDialogToast (UserCenterActivity.this,
+										"数据被外星人带走了");
 								break;
 							case ":1":
-								Log.d ("修改头像", "成功");
-
 								//把file转到getExternalFilesDir (Environment.DIRECTORY_DCIM)目录
 								File fileTarget = new File (getExternalFilesDir (Environment.DIRECTORY_DCIM),
 										"avatar.jpg");
 								FileHelper.moveFile (file, fileTarget);
 
-								writeAvatarToMemory (avatar);
-								Values.setChangeAvatar (true);
+								writeAvatarToSQLiteAndMemory (avatar);
+								Values.CHANGE_AVATAR = true;
 								setResult (Values.RES_CHANGE_SOMETHING);
-								Toast.makeText (UserCenterActivity.this,
-										"改好了", Toast.LENGTH_SHORT).show ();
+								dialogProgressBar.cancel ();
+								DialogToast.showDialogToast (UserCenterActivity.this,
+										"改好了");
 						}
-						dialogProgressBar.cancel ();
 						call.cancel ();
 					}
 
 					@Override public void onFailure (Call<String> call, Throwable t)
 					{
-						Log.d ("修改头像", t.toString ());
-						Toast.makeText (UserCenterActivity.this,
-								"服务器在维护啦", Toast.LENGTH_SHORT).show ();
+						DialogToast.showDialogToast (UserCenterActivity.this,
+								"服务器在维护啦");
 						dialogProgressBar.cancel ();
 						call.cancel ();
 					}
@@ -329,6 +327,7 @@ public class UserCenterActivity extends AppCompatActivity
 
 	public void changeColorWith (View view)
 	{
+		dialog.cancel ();
 		switch (view.getId ())
 		{
 			case R.id.colorBlue:
@@ -359,11 +358,9 @@ public class UserCenterActivity extends AppCompatActivity
 				writeThemeToSQLite (9);
 				break;
 			default:
-				dialog.cancel ();
 				return;
 		}
 		setResult (Values.RES_CHANGE_THEME);
-		dialog.cancel ();
 		finish ();
 	}
 
@@ -372,8 +369,7 @@ public class UserCenterActivity extends AppCompatActivity
 		boolean networkState = NetworkDetector.detect (this);
 		if (!networkState)
 		{
-			Toast.makeText (this, "网络开小差了",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "网络开小差了");
 			return;
 		}
 
@@ -384,7 +380,7 @@ public class UserCenterActivity extends AppCompatActivity
 		EditText editText = contentView.findViewById (R.id.editTextName);
 		ImageView imageView = contentView.findViewById (R.id.imageViewNameClear);
 		EditTextClear.addClearListener (editText, imageView);
-		contentView.findViewById (R.id.nameSave).setBackgroundResource (Values.getSelector ());
+		contentView.findViewById (R.id.nameSave).setBackgroundResource (Values.SELECTOR);
 
 		dialog.setContentView (contentView);
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
@@ -403,8 +399,7 @@ public class UserCenterActivity extends AppCompatActivity
 		boolean networkState = NetworkDetector.detect (this);
 		if (!networkState)
 		{
-			Toast.makeText (this, "网络开小差了",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "网络开小差了");
 			return;
 		}
 
@@ -415,37 +410,38 @@ public class UserCenterActivity extends AppCompatActivity
 			final String name = String.valueOf (editText.getText ());
 
 			if (TextUtils.isEmpty (name))
-				Toast.makeText (UserCenterActivity.this,
-						"没有昵称可不行", Toast.LENGTH_SHORT).show ();
+				DialogToast.showDialogToast (this, "没有昵称可不行");
 			else if (name.length () > 10)
-				Toast.makeText (UserCenterActivity.this,
-						"长度10位以内哦", Toast.LENGTH_SHORT).show ();
+				DialogToast.showDialogToast (this, "长度10位以内哦");
 			else if (name.contains ("  "))
-				Toast.makeText (UserCenterActivity.this,
-						"昵称可不能有连续空格", Toast.LENGTH_SHORT).show ();
+				DialogToast.showDialogToast (this, "昵称可不能有连续空格");
 			else
 			{
-				final Dialog bottomDialog = new Dialog (UserCenterActivity.this,
-						R.style.BottomDialog);
-				View buttonContentView = LayoutInflater.from (UserCenterActivity.this)
-						.inflate (R.layout.dialog_progress_bar, null);
+				if (dialogProgressBar == null)
+				{
+					dialogProgressBar = new Dialog (UserCenterActivity.this,
+							R.style.BottomDialog);
+					View buttonContentView = LayoutInflater.from (UserCenterActivity.this)
+							.inflate (R.layout.dialog_progress_bar, null);
 
-				ProgressBar progressBar = buttonContentView.findViewById (R.id.progressBar);
-				progressBar.setIndeterminateDrawable
-						(getResources ().getDrawable (Values.getProgress ()));
+					ProgressBar progressBar = buttonContentView.findViewById (R.id.progressBar);
+					progressBar.setIndeterminateDrawable
+							(getResources ().getDrawable (Values.PROGRESS));
 
-				bottomDialog.setContentView (buttonContentView);
-				ViewGroup.MarginLayoutParams buttonParams = (ViewGroup.MarginLayoutParams)
-						buttonContentView.getLayoutParams ();
-				buttonParams.width = getResources ().getDisplayMetrics ().widthPixels
-						- Density.dp2px (UserCenterActivity.this, 16f);
-				buttonParams.bottomMargin = Density.dp2px
-						(UserCenterActivity.this, 8f);
-				buttonContentView.setLayoutParams (buttonParams);
-				bottomDialog.getWindow ().setGravity (Gravity.CENTER);
-				bottomDialog.getWindow ().setWindowAnimations
-						(R.style.BottomDialog_Animation);
-				bottomDialog.show ();
+					dialogProgressBar.setContentView (buttonContentView);
+					ViewGroup.MarginLayoutParams buttonParams = (ViewGroup.MarginLayoutParams)
+							buttonContentView.getLayoutParams ();
+					buttonParams.width = getResources ().getDisplayMetrics ().widthPixels
+							- Density.dp2px (UserCenterActivity.this, 16f);
+					buttonParams.bottomMargin = Density.dp2px
+							(UserCenterActivity.this, 8f);
+					buttonContentView.setLayoutParams (buttonParams);
+					dialogProgressBar.getWindow ().setGravity (Gravity.CENTER);
+					dialogProgressBar.getWindow ().setWindowAnimations
+							(R.style.BottomDialog_Animation);
+					dialogProgressBar.setCancelable (false);
+				}
+				dialogProgressBar.show ();
 
 				//新建一个线程去访问服务器
 				new Thread (new Runnable ()
@@ -464,29 +460,29 @@ public class UserCenterActivity extends AppCompatActivity
 								switch (response.body ())
 								{
 									case ":-1":
-										Log.d ("修改昵称", "失败");
-										Toast.makeText (UserCenterActivity.this,
-												"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+										dialogProgressBar.cancel ();
+										dialog.cancel ();
+										DialogToast.showDialogToast (UserCenterActivity.this,
+												"数据被外星人带走了");
 										break;
 									case ":1":
-										Log.d ("修改昵称", "成功");
 										writeNameToSQLiteAndMemory (name);
-										Values.setChangeName (true);
+										Values.CHANGE_NAME = true;
 										setResult (Values.RES_CHANGE_SOMETHING);
+										dialogProgressBar.cancel ();
 										dialog.cancel ();
-										Toast.makeText (UserCenterActivity.this,
-												"改好了", Toast.LENGTH_SHORT).show ();
+										DialogToast.showDialogToast (UserCenterActivity.this,
+												"改好了");
 								}
-								bottomDialog.cancel ();
 								call.cancel ();
 							}
 
 							@Override public void onFailure (Call<String> call, Throwable t)
 							{
-								Log.d ("修改昵称", t.toString ());
-								Toast.makeText (UserCenterActivity.this,
-										"服务器在维护啦", Toast.LENGTH_SHORT).show ();
-								bottomDialog.cancel ();
+								dialogProgressBar.cancel ();
+								dialog.cancel ();
+								DialogToast.showDialogToast (UserCenterActivity.this,
+										"服务器在维护啦");
 								call.cancel ();
 							}
 						});
@@ -504,8 +500,7 @@ public class UserCenterActivity extends AppCompatActivity
 		boolean networkState = NetworkDetector.detect (this);
 		if (!networkState)
 		{
-			Toast.makeText (this, "网络开小差了",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "网络开小差了");
 			return;
 		}
 
@@ -519,7 +514,7 @@ public class UserCenterActivity extends AppCompatActivity
 		EditText editTextNew = contentView.findViewById (R.id.editTextPasswordNew);
 		imageView = contentView.findViewById (R.id.imageViewPasswordNewClear);
 		EditTextClear.addClearListener (editTextNew, imageView);
-		contentView.findViewById (R.id.passwordSave).setBackgroundResource (Values.getSelector ());
+		contentView.findViewById (R.id.passwordSave).setBackgroundResource (Values.SELECTOR);
 
 		dialog.setContentView (contentView);
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
@@ -538,8 +533,7 @@ public class UserCenterActivity extends AppCompatActivity
 		boolean networkState = NetworkDetector.detect (this);
 		if (!networkState)
 		{
-			Toast.makeText (this, "网络开小差了",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "网络开小差了");
 			return;
 		}
 
@@ -551,34 +545,40 @@ public class UserCenterActivity extends AppCompatActivity
 			editText = viewGroup.findViewById (R.id.editTextPasswordNew);
 			final String passwordNew = String.valueOf (editText.getText ());
 
-			if (TextUtils.isEmpty (passwordOld) || !Pattern.matches (Values.passwordRegex, passwordOld))
-				Toast.makeText (UserCenterActivity.this,
-						"这显然不是对的原密码", Toast.LENGTH_SHORT).show ();
-			else if (TextUtils.isEmpty (passwordNew) || !Pattern.matches (Values.passwordRegex, passwordNew))
-				Toast.makeText (UserCenterActivity.this,
-						"这显然不是好的新密码", Toast.LENGTH_SHORT).show ();
+			if (TextUtils.isEmpty (passwordOld) || !Pattern.matches
+					(Values.passwordRegex, passwordOld))
+				DialogToast.showDialogToast (UserCenterActivity.this,
+						"这显然不是对的原密码");
+			else if (TextUtils.isEmpty (passwordNew) || !Pattern.matches
+					(Values.passwordRegex, passwordNew))
+				DialogToast.showDialogToast (UserCenterActivity.this,
+						"这显然不是好的新密码");
 			else
 			{
-				final Dialog bottomDialog = new Dialog (UserCenterActivity.this,
-						R.style.BottomDialog);
-				View buttonContentView = LayoutInflater.from (UserCenterActivity.this).inflate
-						(R.layout.dialog_progress_bar, null);
+				if (dialogProgressBar == null)
+				{
+					dialogProgressBar = new Dialog (UserCenterActivity.this,
+							R.style.BottomDialog);
+					View buttonContentView = LayoutInflater.from (UserCenterActivity.this).inflate
+							(R.layout.dialog_progress_bar, null);
 
-				ProgressBar progressBar = buttonContentView.findViewById (R.id.progressBar);
-				progressBar.setIndeterminateDrawable
-						(getResources ().getDrawable (Values.getProgress ()));
+					ProgressBar progressBar = buttonContentView.findViewById (R.id.progressBar);
+					progressBar.setIndeterminateDrawable
+							(getResources ().getDrawable (Values.PROGRESS));
 
-				bottomDialog.setContentView (buttonContentView);
-				ViewGroup.MarginLayoutParams buttonParams = (ViewGroup.MarginLayoutParams)
-						buttonContentView.getLayoutParams ();
-				buttonParams.width = getResources ().getDisplayMetrics ().widthPixels
-						- Density.dp2px (UserCenterActivity.this, 16f);
-				buttonParams.bottomMargin = Density.dp2px
-						(UserCenterActivity.this, 8f);
-				buttonContentView.setLayoutParams (buttonParams);
-				bottomDialog.getWindow ().setGravity (Gravity.CENTER);
-				bottomDialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
-				bottomDialog.show ();
+					dialogProgressBar.setContentView (buttonContentView);
+					ViewGroup.MarginLayoutParams buttonParams = (ViewGroup.MarginLayoutParams)
+							buttonContentView.getLayoutParams ();
+					buttonParams.width = getResources ().getDisplayMetrics ().widthPixels
+							- Density.dp2px (UserCenterActivity.this, 16f);
+					buttonParams.bottomMargin = Density.dp2px
+							(UserCenterActivity.this, 8f);
+					buttonContentView.setLayoutParams (buttonParams);
+					dialogProgressBar.getWindow ().setGravity (Gravity.CENTER);
+					dialogProgressBar.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+					dialogProgressBar.setCancelable (false);
+				}
+				dialogProgressBar.show ();
 
 				//新建一个线程去访问服务器
 				new Thread (new Runnable ()
@@ -598,34 +598,34 @@ public class UserCenterActivity extends AppCompatActivity
 								switch (response.body ())
 								{
 									case ":-1":
-										Log.d ("修改密码", "失败");
-										Toast.makeText (UserCenterActivity.this,
-												"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+										dialogProgressBar.cancel ();
+										dialog.cancel ();
+										DialogToast.showDialogToast (UserCenterActivity.this,
+												"数据被外星人带走了");
 										break;
 									case ":0":
-										Log.d ("修改密码", "失败");
-										Toast.makeText (UserCenterActivity.this,
-												"原密码错了", Toast.LENGTH_SHORT).show ();
+										dialogProgressBar.cancel ();
+										dialog.cancel ();
+										DialogToast.showDialogToast (UserCenterActivity.this,
+												"原密码错了");
 										break;
 									case ":1":
-										Log.d ("修改密码", "成功");
 										setResult (Values.RES_CHANGE_PASSWORD);
-										Toast.makeText (UserCenterActivity.this,
-												"改好了", Toast.LENGTH_SHORT).show ();
+										dialogProgressBar.cancel ();
 										dialog.cancel ();
+										DialogToast.showDialogToast (UserCenterActivity.this,
+												"改好了");
 										finish ();
 								}
-								bottomDialog.cancel ();
 								call.cancel ();
 							}
 
 							@Override public void onFailure (Call<String> call, Throwable t)
 							{
-								Log.d ("修改密码", t.toString ());
-								Toast.makeText (UserCenterActivity.this,
-										"服务器在维护啦",
-										Toast.LENGTH_SHORT).show ();
-								bottomDialog.cancel ();
+								dialogProgressBar.cancel ();
+								dialog.cancel ();
+								DialogToast.showDialogToast (UserCenterActivity.this,
+										"服务器在维护啦");
 								call.cancel ();
 							}
 						});
@@ -644,7 +644,7 @@ public class UserCenterActivity extends AppCompatActivity
 		View contentView = LayoutInflater.from (this)
 				.inflate (R.layout.dialog_content_sign_out, null);
 
-		contentView.findViewById (R.id.signOut).setBackgroundResource (Values.getSelector ());
+		contentView.findViewById (R.id.signOut).setBackgroundResource (Values.SELECTOR);
 
 		dialog.setContentView (contentView);
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
@@ -660,24 +660,27 @@ public class UserCenterActivity extends AppCompatActivity
 
 	public void signOutWith (View view)
 	{
+		dialog.cancel ();
 		if (view.getId () == R.id.signOut)
 		{
 			setResult (Values.RES_SIGN_OUT);
-			dialog.cancel ();
 			finish ();
 		}
-		else
-			dialog.cancel ();
 	}
 
 	/**
 	 * 写入内存头像
 	 */
-	private void writeAvatarToMemory (Bitmap avatar)
+	private void writeAvatarToSQLiteAndMemory (Bitmap avatar)
 	{
 		user.setAvatar (avatar);
+		user.setHasAvatar (true);
 		ImageView imageView = findViewById (R.id.imageViewAvatar);
 		imageView.setImageBitmap (avatar);
+		helper = SQLiteHelper.getHelper (this);
+		SQLiteDatabase db = helper.getWritableDatabase ();
+		db.execSQL ("update user set avatar=\"1\"");
+		db.close ();
 	}
 
 	/**
@@ -687,7 +690,10 @@ public class UserCenterActivity extends AppCompatActivity
 	{
 		helper = SQLiteHelper.getHelper (this);
 		SQLiteDatabase db = helper.getWritableDatabase ();
-		db.execSQL ("update setting set color = \"" + color + "\"");
+		SQLiteStatement sqLiteStatement = db.compileStatement
+				("update setting set color = ?");
+		sqLiteStatement.bindString (1, color + "");
+		sqLiteStatement.executeUpdateDelete ();
 		db.close ();
 	}
 
@@ -699,7 +705,10 @@ public class UserCenterActivity extends AppCompatActivity
 		user.setName (name);
 		helper = SQLiteHelper.getHelper (this);
 		SQLiteDatabase db = helper.getWritableDatabase ();
-		db.execSQL ("update user set name = \"" + name + "\"");
+		SQLiteStatement sqLiteStatement = db.compileStatement
+				("update user set name = ?");
+		sqLiteStatement.bindString (1, name);
+		sqLiteStatement.executeUpdateDelete ();
 		db.close ();
 	}
 }

@@ -3,6 +3,7 @@ package com.lin.mnote;
 import android.app.Dialog;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
@@ -10,7 +11,6 @@ import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -20,10 +20,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.lin.bean.User;
 import com.lin.utils.Density;
+import com.lin.utils.DialogToast;
 import com.lin.utils.EditTextClear;
 import com.lin.utils.FileHelper;
 import com.lin.utils.NetworkDetector;
@@ -45,6 +45,7 @@ import retrofit2.Retrofit;
 public class SignInActivity extends AppCompatActivity
 {
 	private User user;
+	private Dialog dialog;
 
 	@Override
 	protected void onCreate (Bundle savedInstanceState)
@@ -53,7 +54,7 @@ public class SignInActivity extends AppCompatActivity
 		setContentView (R.layout.activity_sign_in);
 
 		Toolbar toolbar = findViewById (R.id.toolbar);
-		toolbar.setBackgroundResource (Values.getColor ());
+		toolbar.setBackgroundResource (Values.COLOR);
 		setSupportActionBar (toolbar);
 		getSupportActionBar ().setDisplayHomeAsUpEnabled (true);
 
@@ -93,16 +94,16 @@ public class SignInActivity extends AppCompatActivity
 				{
 					case Values.RES_SIGN_UP:
 						//注册成功就等同于登录成功？？
-//						String account = data.getExtras ().getString ("account");
-//						writeUserToSQLite (account, account, 0);
-//						writeUserToMemory (account, account);
-//						setResult (Values.RES_SIGN_IN);
-//						finish ();
-//						break;
+						//String account = data.getExtras ().getString ("account");
+						//writeUserToSQLite (account, account, 0);
+						//writeUserToMemory (account, account);
+						//setResult (Values.RES_SIGN_IN);
+						//finish ();
+						//break;
 					case Values.RES_ACCOUNT_OCCUPIED:
 						//填入账号，方便登录
 						((EditText) findViewById (R.id.editTextAccount))
-								.setText (data.getExtras ().getString ("account"));
+								.setText (data.getStringExtra ("account"));
 						break;
 				}
 				break;
@@ -112,20 +113,21 @@ public class SignInActivity extends AppCompatActivity
 					case Values.RES_FORGET_PASSWORD:
 						//填入账号，方便登录
 						((EditText) findViewById (R.id.editTextAccount))
-								.setText (data.getExtras ().getString ("account"));
+								.setText (data.getStringExtra ("account"));
 						break;
 				}
+				break;
 		}
 		super.onActivityResult (requestCode, resultCode, data);
 	}
 
 	private void loadView ()
 	{
-		findViewById (R.id.buttonSignIn).setBackgroundResource (Values.getBackground ());
+		findViewById (R.id.buttonSignIn).setBackgroundResource (Values.BACKGROUND);
 		TextView textView = findViewById (R.id.textViewNewRegister);
-		textView.setTextColor (getResources ().getColor (Values.getColor ()));
+		textView.setTextColor (getResources ().getColor (Values.COLOR));
 		textView = findViewById (R.id.textViewForgetPassword);
-		textView.setTextColor (getResources ().getColor (Values.getColor ()));
+		textView.setTextColor (getResources ().getColor (Values.COLOR));
 	}
 
 	public void buttonSignIn (View view)
@@ -133,8 +135,7 @@ public class SignInActivity extends AppCompatActivity
 		boolean networkState = NetworkDetector.detect (this);
 		if (!networkState)
 		{
-			Toast.makeText (this, "网络开小差了",
-					Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "网络开小差了");
 			return;
 		}
 
@@ -146,30 +147,35 @@ public class SignInActivity extends AppCompatActivity
 
 		if (TextUtils.isEmpty (account) || !Pattern.matches (Values.accountRegex, account))
 		{
-			Toast.makeText (this, "这显然是个假账号", Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "这显然是个假账号");
 			return;
 		}
 		if (TextUtils.isEmpty (password) || !Pattern.matches (Values.passwordRegex, password))
 		{
-			Toast.makeText (this, "这显然是个假密码", Toast.LENGTH_SHORT).show ();
+			DialogToast.showDialogToast (this, "这显然是个假密码");
 			return;
 		}
 
-		final Dialog dialog = new Dialog (this, R.style.BottomDialog);
-		View contentView = LayoutInflater.from (this).inflate
-				(R.layout.dialog_progress_bar, null);
-		ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
-		progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.getProgress ()));
+		if (dialog == null)
+		{
+			dialog = new Dialog (this, R.style.BottomDialog);
+			View contentView = LayoutInflater.from (this).inflate
+					(R.layout.dialog_progress_bar, null);
 
-		dialog.setContentView (contentView);
-		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
-				contentView.getLayoutParams ();
-		params.width = getResources ().getDisplayMetrics ().widthPixels
-				- Density.dp2px (this, 16f);
-		params.bottomMargin = Density.dp2px (this, 8f);
-		contentView.setLayoutParams (params);
-		dialog.getWindow ().setGravity (Gravity.CENTER);
-		dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			ProgressBar progressBar = contentView.findViewById (R.id.progressBar);
+			progressBar.setIndeterminateDrawable (getResources ().getDrawable (Values.PROGRESS));
+
+			dialog.setContentView (contentView);
+			ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams)
+					contentView.getLayoutParams ();
+			params.width = getResources ().getDisplayMetrics ().widthPixels
+					- Density.dp2px (this, 16f);
+			params.bottomMargin = Density.dp2px (this, 8f);
+			contentView.setLayoutParams (params);
+			dialog.getWindow ().setGravity (Gravity.CENTER);
+			dialog.getWindow ().setWindowAnimations (R.style.BottomDialog_Animation);
+			dialog.setCancelable (false);
+		}
 		dialog.show ();
 
 		new Thread (new Runnable ()
@@ -187,18 +193,14 @@ public class SignInActivity extends AppCompatActivity
 						switch (response.body ())
 						{
 							case ":-1":
-								Log.d ("登录", "失败");
-								Toast.makeText (SignInActivity.this,
-										"数据被外星人带走了", Toast.LENGTH_SHORT).show ();
+								DialogToast.showDialogToast (SignInActivity.this,
+										"数据被外星人带走了");
 								break;
 							case ":0":
-								Log.d ("登录", "失败");
-								Toast.makeText (SignInActivity.this,
-										"账号密码或许错了", Toast.LENGTH_SHORT).show ();
+								DialogToast.showDialogToast (SignInActivity.this,
+										"账号密码或许错了");
 								break;
 							default:
-								Log.d ("登录", "成功");
-
 								String name = "", avatar = "";
 								try
 								{
@@ -236,9 +238,8 @@ public class SignInActivity extends AppCompatActivity
 					//超时未回应也会进入这个函数
 					@Override public void onFailure (Call<String> call, Throwable t)
 					{
-						Log.d ("登录失败", t.toString ());
-						Toast.makeText (SignInActivity.this,
-								"服务器在维护啦", Toast.LENGTH_SHORT).show ();
+						DialogToast.showDialogToast (SignInActivity.this,
+								"服务器在维护啦");
 						dialog.cancel ();
 						call.cancel ();
 					}
@@ -269,9 +270,14 @@ public class SignInActivity extends AppCompatActivity
 	{
 		SQLiteHelper helper = SQLiteHelper.getHelper (this);
 		SQLiteDatabase db = helper.getWritableDatabase ();
+		db.execSQL ("begin");
 		db.execSQL ("delete from user");
-		db.execSQL ("insert into user values (\"" + account + "\",\"" +
-				name + "\",\"" + avatar + "\")");
+		SQLiteStatement sqLiteStatement = db.compileStatement
+				("insert into user values (?,?,?)");
+		String[] params = {account, name, avatar + ""};
+		sqLiteStatement.bindAllArgsAsStrings (params);
+		sqLiteStatement.executeInsert ();
+		db.execSQL ("commit");
 		db.close ();
 	}
 

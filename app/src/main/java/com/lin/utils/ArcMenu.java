@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
@@ -28,11 +29,11 @@ public class ArcMenu extends ViewGroup
 	private AnimationSet scaleSmall;
 	//半径
 	private int mRadius;
-	//动画持续时间ms
-	private int duration = 300;
 	//主菜单按钮开关状态
 	private boolean opened = false;
-	//外部使用的点击监听器
+	//外部使用的主菜单点击监听器
+	private onMenuClickListener mMenuClickListener;
+	//外部使用的子菜单点击监听器
 	private onMenuItemClickListener mMenuItemClickListener;
 	//主菜单按钮的位置偏移，关乎到子菜单按钮能不能完全藏在主菜单后面
 	int offset;
@@ -94,9 +95,9 @@ public class ArcMenu extends ViewGroup
 				view.setFocusable (false);
 
 				//子类view右边界距离父类view右边界的长度
-				int right = (int) (mRadius * Math.sin (Math.PI / 2 / (count - 1) * i));
+				int right = (int) (mRadius * Math.sin (Math.PI / 2 / (count - 1) * (count - 1 - i)));
 				//子类view下边界距离父类view下边界的长度
-				int bottom = (int) (mRadius * Math.cos (Math.PI / 2 / (count - 1) * i));
+				int bottom = (int) (mRadius * Math.cos (Math.PI / 2 / (count - 1) * (count - 1 - i)));
 
 				view.layout (parentWidth - viewWidth - right - offset,
 						parentHeight - viewHeight - bottom - offset,
@@ -106,14 +107,28 @@ public class ArcMenu extends ViewGroup
 		}
 	}
 
+	public boolean isOpened ()
+	{
+		return opened;
+	}
+
+	//外部使用的主菜单点击监听器
+	public interface onMenuClickListener
+	{
+		void onClick (View view);
+	}
+
+	public void setOnMenuClickListener (onMenuClickListener mMenuClickListener)
+	{
+		this.mMenuClickListener = mMenuClickListener;
+	}
+
+	//外部使用的子菜单点击监听器
 	public interface onMenuItemClickListener
 	{
 		void onClick (View view);
 	}
 
-	/**
-	 * @param mMenuItemClickListener 外部点击监听器
-	 */
 	public void setOnMenuItemClickListener (onMenuItemClickListener mMenuItemClickListener)
 	{
 		this.mMenuItemClickListener = mMenuItemClickListener;
@@ -131,6 +146,10 @@ public class ArcMenu extends ViewGroup
 				//展开或收回子菜单按钮
 				toggleMenu ();
 				opened = !opened;
+
+				//执行外部的点击事件
+				if (mMenuClickListener != null)
+					mMenuClickListener.onClick (v);
 			}
 		});
 	}
@@ -139,11 +158,12 @@ public class ArcMenu extends ViewGroup
 	{
 		if (rotate == null)
 		{
-			rotate = new RotateAnimation (0f, 180f,
+			rotate = new RotateAnimation (0f, 360f,
 					Animation.RELATIVE_TO_SELF, 0.5f,
 					Animation.RELATIVE_TO_SELF, 0.5f);
-			rotate.setDuration (duration);
-			rotate.setFillAfter (true);
+			rotate.setDuration (Values.duration * 5 / 3);
+			rotate.setInterpolator (new AccelerateDecelerateInterpolator ());
+			rotate.setFillAfter (false);
 		}
 		v.startAnimation (rotate);
 	}
@@ -157,8 +177,8 @@ public class ArcMenu extends ViewGroup
 		{
 			view[i] = getChildAt (i);
 
-			int cl = (int) (mRadius * Math.sin (Math.PI / 2 / (count - 1) * i));
-			int ct = (int) (mRadius * Math.cos (Math.PI / 2 / (count - 1) * i));
+			int cl = (int) (mRadius * Math.sin (Math.PI / 2 / (count - 1) * (count - 1 - i)));
+			int ct = (int) (mRadius * Math.cos (Math.PI / 2 / (count - 1) * (count - 1 - i)));
 
 			final int index = i;
 			if (!opened)
@@ -166,15 +186,13 @@ public class ArcMenu extends ViewGroup
 				if (translateOpen[i] == null)
 				{
 					translateOpen[i] = new TranslateAnimation (cl, 0, ct, 0);
-					translateOpen[i].setFillAfter (true);
-					translateOpen[i].setDuration (duration);
-					translateOpen[i].setStartOffset (i * 180 / count);
+					translateOpen[i].setDuration (Values.duration);
+					translateOpen[i].setStartOffset ((count - 1 - i) * Values.duration / count);
+					translateOpen[i].setFillAfter (false);
+					translateOpen[i].setInterpolator (new AccelerateDecelerateInterpolator ());
 					translateOpen[i].setAnimationListener (new Animation.AnimationListener ()
 					{
-						@Override public void onAnimationStart (Animation animation)
-						{
-
-						}
+						@Override public void onAnimationStart (Animation animation) { }
 
 						@Override public void onAnimationEnd (Animation animation)
 						{
@@ -183,10 +201,7 @@ public class ArcMenu extends ViewGroup
 							view[index].setFocusable (true);
 						}
 
-						@Override public void onAnimationRepeat (Animation animation)
-						{
-
-						}
+						@Override public void onAnimationRepeat (Animation animation) { }
 					});
 				}
 				view[i].startAnimation (translateOpen[i]);
@@ -196,9 +211,10 @@ public class ArcMenu extends ViewGroup
 				if (translateClose[i] == null)
 				{
 					translateClose[i] = new TranslateAnimation (0, cl, 0, ct);
+					translateClose[i].setDuration (Values.duration);
+					translateClose[i].setStartOffset ((count - 1 - i) * Values.duration / count);
 					translateClose[i].setFillAfter (false);
-					translateClose[i].setDuration (duration);
-					translateClose[i].setStartOffset (i * 180 / count);
+					translateClose[i].setInterpolator (new AccelerateDecelerateInterpolator ());
 					translateClose[i].setAnimationListener (new Animation.AnimationListener ()
 					{
 						@Override public void onAnimationStart (Animation animation)
@@ -208,15 +224,9 @@ public class ArcMenu extends ViewGroup
 							view[index].setFocusable (false);
 						}
 
-						@Override public void onAnimationEnd (Animation animation)
-						{
+						@Override public void onAnimationEnd (Animation animation) { }
 
-						}
-
-						@Override public void onAnimationRepeat (Animation animation)
-						{
-
-						}
+						@Override public void onAnimationRepeat (Animation animation) { }
 					});
 				}
 				view[i].startAnimation (translateClose[i]);
@@ -245,10 +255,14 @@ public class ArcMenu extends ViewGroup
 		for (int i = 0; i < getChildCount (); ++i)
 		{
 			View view = getChildAt (i);
-			if (i == position)
-				view.startAnimation (scaleBigAnim ());
-			else
-				view.startAnimation (scaleSmallAnim ());
+			//中间的按钮是页面跳转，播放动画体验不好
+			if (position != 1)
+			{
+				if (i == position)
+					view.startAnimation (scaleBigAnim ());
+				else
+					view.startAnimation (scaleSmallAnim ());
+			}
 			view.setClickable (false);
 			view.setFocusable (false);
 			view.setVisibility (INVISIBLE);
@@ -262,14 +276,14 @@ public class ArcMenu extends ViewGroup
 			scaleBig = new AnimationSet (true);
 			//放大
 			ScaleAnimation scaleAnimation = new ScaleAnimation
-					(1.0f, 1.5f, 1.0f, 1.5f,
+					(1f, 1.5f, 1f, 1.5f,
 							Animation.RELATIVE_TO_SELF, 0.5f,
 							Animation.RELATIVE_TO_SELF, 0.5f);
 			//渐变透明
-			AlphaAnimation alphaAnimation = new AlphaAnimation (1f, 0.0f);
+			AlphaAnimation alphaAnimation = new AlphaAnimation (1f, 0f);
 			scaleBig.addAnimation (scaleAnimation);
 			scaleBig.addAnimation (alphaAnimation);
-			scaleBig.setDuration (duration);
+			scaleBig.setDuration (Values.duration);
 			scaleBig.setFillAfter (false);
 		}
 		return scaleBig;
@@ -282,14 +296,14 @@ public class ArcMenu extends ViewGroup
 			scaleSmall = new AnimationSet (true);
 			//缩小
 			ScaleAnimation scaleAnimation = new ScaleAnimation
-					(1.0f, 0.0f, 1.0f, 0.0f,
+					(1f, 0f, 1f, 0f,
 							Animation.RELATIVE_TO_SELF, 0.5f,
 							Animation.RELATIVE_TO_SELF, 0.5f);
 			//渐变透明
-			AlphaAnimation alphaAnimation = new AlphaAnimation (1f, 0.0f);
+			AlphaAnimation alphaAnimation = new AlphaAnimation (1f, 0f);
 			scaleSmall.addAnimation (scaleAnimation);
 			scaleSmall.addAnimation (alphaAnimation);
-			scaleSmall.setDuration (duration);
+			scaleSmall.setDuration (Values.duration);
 			scaleSmall.setFillAfter (false);
 		}
 		return scaleSmall;

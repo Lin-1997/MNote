@@ -5,9 +5,57 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:background="@color/colorActivity"
 	android:fitsSystemWindows="true"
 	tools:context=".SignInActivity">
+
+	<android.support.constraint.Guideline
+		android:id="@+id/GLBar"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal"
+		app:layout_constraintGuide_percent="0.1"/>
+
+	<android.support.constraint.Guideline
+		android:id="@+id/GLLogo"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal"
+		app:layout_constraintGuide_percent="0.5"/>
+
+	<android.support.constraint.Guideline
+		android:id="@+id/GLAccount"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal"
+		app:layout_constraintGuide_percent="0.6"/>
+
+	<android.support.constraint.Guideline
+		android:id="@+id/GLPassword"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal"
+		app:layout_constraintGuide_percent="0.7"/>
+
+	<android.support.constraint.Guideline
+		android:id="@+id/GLSignIn"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal"
+		app:layout_constraintGuide_percent="0.85"/>
+
+	<android.support.constraint.Guideline
+		android:id="@+id/GLLeft"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="vertical"
+		app:layout_constraintGuide_percent="0.1"/>
+
+	<android.support.constraint.Guideline
+		android:id="@+id/GLRight"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="vertical"
+		app:layout_constraintGuide_percent="0.9"/>
 
 	<android.support.design.widget.AppBarLayout
 		android:id="@+id/appBarLayout"
@@ -28,27 +76,6 @@
 
 	</android.support.design.widget.AppBarLayout>
 
-	<android.support.constraint.Guideline
-		android:id="@+id/GLBar"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="horizontal"
-		app:layout_constraintGuide_percent="0.1"/>
-
-	<android.support.constraint.Guideline
-		android:id="@+id/GLLeft"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="vertical"
-		app:layout_constraintGuide_percent="0.1"/>
-
-	<android.support.constraint.Guideline
-		android:id="@+id/GLRight"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="vertical"
-		app:layout_constraintGuide_percent="0.9"/>
-
 	<de.hdodenhof.circleimageview.CircleImageView
 		android:id="@+id/imageViewLogo"
 		android:layout_width="0dp"
@@ -63,13 +90,6 @@
 		app:layout_constraintEnd_toStartOf="@+id/GLRight"
 		app:layout_constraintStart_toStartOf="@+id/GLLeft"
 		app:layout_constraintTop_toBottomOf="@+id/GLBar"/>
-
-	<android.support.constraint.Guideline
-		android:id="@+id/GLLogo"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="horizontal"
-		app:layout_constraintGuide_percent="0.5"/>
 
 	<RelativeLayout
 		android:id="@+id/relativeLayoutAccount"
@@ -125,13 +145,6 @@
 
 	</RelativeLayout>
 
-	<android.support.constraint.Guideline
-		android:id="@+id/GLAccount"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="horizontal"
-		app:layout_constraintGuide_percent="0.6"/>
-
 	<RelativeLayout
 		android:id="@+id/relativeLayoutPassword"
 		android:layout_width="0dp"
@@ -186,13 +199,6 @@
 
 	</RelativeLayout>
 
-	<android.support.constraint.Guideline
-		android:id="@+id/GLPassword"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="horizontal"
-		app:layout_constraintGuide_percent="0.7"/>
-
 	<Button
 		android:id="@+id/buttonSignIn"
 		android:layout_width="0dp"
@@ -208,13 +214,6 @@
 		app:layout_constraintEnd_toStartOf="@+id/GLRight"
 		app:layout_constraintStart_toStartOf="@+id/GLLeft"
 		app:layout_constraintTop_toTopOf="@+id/GLPassword"/>
-
-	<android.support.constraint.Guideline
-		android:id="@+id/GLSignIn"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="horizontal"
-		app:layout_constraintGuide_percent="0.85"/>
 
 	<TextView
 		android:id="@+id/textViewNewRegister"

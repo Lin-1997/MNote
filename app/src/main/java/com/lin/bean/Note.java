@@ -2,44 +2,53 @@ package com.lin.bean;
 
 public class Note
 {
-	private String createDate;
-	private String createTime;
-	private StringBuilder content;
+	private int id;
+	private String updateDate;
+	private String updateTime;
+	private String content;
+	private int status; //0所有操作已经上传，-1新建操作未上传，1更新未上传，-2下载待删除
 
-	public Note (String createDate, String createTime, StringBuilder content)
+	public Note (int id, String updateDate, String updateTime, String content, int status)
 	{
-		this.createDate = createDate;
-		this.createTime = createTime;
+		this.id = id;
+		this.updateDate = updateDate;
+		this.updateTime = updateTime;
 		this.content = content;
+		this.status = status;
 	}
 
-	public String getCreateDate ()
+	public int getId ()
 	{
-		return createDate;
+		return id;
 	}
 
-	public void setCreateDate (String createDate)
+	public void setId (int id)
 	{
-		this.createDate = createDate;
+		this.id = id;
 	}
 
-	public String getCreateTime ()
+	public String getUpdateDate ()
 	{
-		return createTime;
+		return updateDate;
 	}
 
-	public void setCreateTime (String createTime)
+	public String getUpdateTime ()
 	{
-		this.createTime = createTime;
+		return updateTime;
 	}
 
-	public StringBuilder getContent ()
+	public String getContent ()
 	{
 		return content;
 	}
 
-	public void setContent (StringBuilder content)
+	public int getStatus ()
 	{
-		this.content = content;
+		return status;
+	}
+
+	public void setStatus (int status)
+	{
+		this.status = status;
 	}
 }

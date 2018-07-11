@@ -13,9 +13,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class FileHelper
 {
@@ -104,6 +108,35 @@ public class FileHelper
 		catch (IOException e)
 		{
 			e.printStackTrace ();
+		}
+	}
+
+	public static boolean String2Markdown (String path, String content)
+	{
+		SimpleDateFormat dateFormat1 = new SimpleDateFormat ("yyyyMMdd", Locale.CHINA);
+		SimpleDateFormat dateFormat2 = new SimpleDateFormat ("HHmmss", Locale.CHINA);
+		Date date = new Date (System.currentTimeMillis ());
+		String curDate = dateFormat1.format (date);
+		String curTime = dateFormat2.format (date);
+
+		try
+		{
+			File file = new File (path, curDate + curTime + ".md");
+			FileWriter fileWriter = new FileWriter (file);
+			fileWriter.write (content);
+			fileWriter.flush ();
+			fileWriter.close ();
+			return true;
+		}
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace ();
+			return false;
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace ();
+			return false;
 		}
 	}
 }

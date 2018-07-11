@@ -5,15 +5,13 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.os.Handler;
+import android.support.constraint.Guideline;
 import android.support.v4.widget.NestedScrollView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-//暂时发现1.0.2版本才可以做到隐藏展开再放大
-//更新的版本不展开隐藏就直接放大
-//implementation 'com.android.support.constraint:constraint-layout:1.0.2'
 public class UnfoldAndZoomScrollView extends NestedScrollView
 {
 	public UnfoldAndZoomScrollView (Context context)
@@ -83,11 +81,18 @@ public class UnfoldAndZoomScrollView extends NestedScrollView
 	{
 		super.onFinishInflate ();
 		setOverScrollMode (OVER_SCROLL_NEVER);
+		//设置需要放大的View
 		if (getChildAt (0) != null && getChildAt (0) instanceof ViewGroup && headView == null)
 		{
+			//第一个子View应该设置为Layout
 			ViewGroup mViewGroup = (ViewGroup) getChildAt (0);
-			if (mViewGroup.getChildCount () > 0)
-				headView = mViewGroup.getChildAt (0);
+			//取Layout中Guideline以外的第一个子View
+			for (int i = 0; i < mViewGroup.getChildCount (); ++i)
+				if (!(mViewGroup.getChildAt (i) instanceof Guideline))
+				{
+					headView = mViewGroup.getChildAt (i);
+					break;
+				}
 		}
 	}
 
