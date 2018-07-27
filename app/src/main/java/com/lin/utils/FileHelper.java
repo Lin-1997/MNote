@@ -11,7 +11,6 @@ import android.util.Base64;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -67,10 +66,6 @@ public class FileHelper
 			os.close ();
 			deleteFile (from);
 		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace ();
-		}
 		catch (IOException e)
 		{
 			e.printStackTrace ();
@@ -101,10 +96,6 @@ public class FileHelper
 			os.flush ();
 			os.close ();
 		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace ();
-		}
 		catch (IOException e)
 		{
 			e.printStackTrace ();
@@ -127,11 +118,6 @@ public class FileHelper
 			fileWriter.flush ();
 			fileWriter.close ();
 			return true;
-		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace ();
-			return false;
 		}
 		catch (IOException e)
 		{

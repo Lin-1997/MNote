@@ -47,4 +47,5 @@
 	<string name="newPassword">新密码:6至16位字母数字下划线</string>
 	<string name="nameHint">长度10位以内</string>
 	<string name="noNote">一片贫瘠的土地</string>
+	<string name="title_activity_main2">Main2Activity</string>
 </resources>

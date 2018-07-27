@@ -9,13 +9,6 @@
 	tools:context=".SignInActivity">
 
 	<android.support.constraint.Guideline
-		android:id="@+id/GLBar"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="horizontal"
-		app:layout_constraintGuide_percent="0.1"/>
-
-	<android.support.constraint.Guideline
 		android:id="@+id/GLLogo"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
@@ -37,13 +30,6 @@
 		app:layout_constraintGuide_percent="0.7"/>
 
 	<android.support.constraint.Guideline
-		android:id="@+id/GLSignIn"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="horizontal"
-		app:layout_constraintGuide_percent="0.85"/>
-
-	<android.support.constraint.Guideline
 		android:id="@+id/GLLeft"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
@@ -59,18 +45,15 @@
 
 	<android.support.design.widget.AppBarLayout
 		android:id="@+id/appBarLayout"
-		android:layout_width="0dp"
-		android:layout_height="0dp"
-		android:theme="@style/AppTheme.AppBarOverlay"
-		app:layout_constraintBottom_toTopOf="@+id/GLBar"
-		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintTop_toTopOf="parent">
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:theme="@style/MyBlueTheme.AppBarOverlay">
 
 		<android.support.v7.widget.Toolbar
 			android:id="@+id/toolbar"
 			android:layout_width="match_parent"
-			android:layout_height="match_parent"
+			android:layout_height="?attr/actionBarSize"
+			android:background="?attr/colorPrimary"
 			app:popupTheme="@style/AppTheme.PopupOverlay"
 			app:title="@string/signIn"/>
 
@@ -89,16 +72,13 @@
 		app:layout_constraintBottom_toTopOf="@+id/GLLogo"
 		app:layout_constraintEnd_toStartOf="@+id/GLRight"
 		app:layout_constraintStart_toStartOf="@+id/GLLeft"
-		app:layout_constraintTop_toBottomOf="@+id/GLBar"/>
+		app:layout_constraintTop_toBottomOf="@+id/appBarLayout"/>
 
 	<RelativeLayout
 		android:id="@+id/relativeLayoutAccount"
 		android:layout_width="0dp"
-		android:layout_height="0dp"
-		android:layout_marginBottom="8dp"
-		android:layout_marginTop="4dp"
+		android:layout_height="46dp"
 		android:background="@drawable/rectangle_with_radius"
-		app:layout_constraintBottom_toTopOf="@+id/GLAccount"
 		app:layout_constraintEnd_toStartOf="@+id/GLRight"
 		app:layout_constraintStart_toStartOf="@+id/GLLeft"
 		app:layout_constraintTop_toTopOf="@+id/GLLogo">
@@ -106,10 +86,8 @@
 		<ImageView
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_alignParentLeft="true"
 			android:layout_alignParentStart="true"
 			android:layout_centerVertical="true"
-			android:layout_marginLeft="5dp"
 			android:layout_marginStart="5dp"
 			android:padding="2dp"
 			app:srcCompat="@drawable/ic_account_black_24dp"/>
@@ -135,10 +113,8 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_alignParentEnd="true"
-			android:layout_alignParentRight="true"
 			android:layout_centerVertical="true"
 			android:layout_marginEnd="5dp"
-			android:layout_marginRight="5dp"
 			android:padding="2dp"
 			android:visibility="invisible"
 			app:srcCompat="@drawable/ic_clear_black_24dp"/>
@@ -148,11 +124,8 @@
 	<RelativeLayout
 		android:id="@+id/relativeLayoutPassword"
 		android:layout_width="0dp"
-		android:layout_height="0dp"
-		android:layout_marginBottom="8dp"
-		android:layout_marginTop="4dp"
+		android:layout_height="46dp"
 		android:background="@drawable/rectangle_with_radius"
-		app:layout_constraintBottom_toTopOf="@+id/GLPassword"
 		app:layout_constraintEnd_toStartOf="@+id/GLRight"
 		app:layout_constraintStart_toStartOf="@+id/GLLeft"
 		app:layout_constraintTop_toTopOf="@+id/GLAccount">
@@ -160,10 +133,8 @@
 		<ImageView
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_alignParentLeft="true"
 			android:layout_alignParentStart="true"
 			android:layout_centerVertical="true"
-			android:layout_marginLeft="5dp"
 			android:layout_marginStart="5dp"
 			android:padding="2dp"
 			app:srcCompat="@drawable/ic_password_black_24dp"/>
@@ -189,10 +160,8 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_alignParentEnd="true"
-			android:layout_alignParentRight="true"
 			android:layout_centerVertical="true"
 			android:layout_marginEnd="5dp"
-			android:layout_marginRight="5dp"
 			android:padding="2dp"
 			android:visibility="invisible"
 			app:srcCompat="@drawable/ic_clear_black_24dp"/>
@@ -202,15 +171,13 @@
 	<Button
 		android:id="@+id/buttonSignIn"
 		android:layout_width="0dp"
-		android:layout_height="0dp"
-		android:layout_marginBottom="8dp"
-		android:layout_marginTop="32dp"
+		android:layout_height="46dp"
+		android:layout_marginTop="16dp"
 		android:background="@drawable/button_blue"
 		android:onClick="buttonSignIn"
 		android:text="@string/signIn"
 		android:textColor="#fff"
 		android:textSize="20sp"
-		app:layout_constraintBottom_toTopOf="@+id/GLSignIn"
 		app:layout_constraintEnd_toStartOf="@+id/GLRight"
 		app:layout_constraintStart_toStartOf="@+id/GLLeft"
 		app:layout_constraintTop_toTopOf="@+id/GLPassword"/>
@@ -219,32 +186,28 @@
 		android:id="@+id/textViewNewRegister"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginBottom="4dp"
-		android:layout_marginLeft="4dp"
-		android:layout_marginStart="4dp"
+		android:layout_marginTop="24dp"
 		android:clickable="true"
 		android:focusable="true"
 		android:onClick="textViewNewRegister"
 		android:text="@string/signUp"
 		android:textColor="@color/colorBlue"
 		android:textSize="16sp"
-		app:layout_constraintBottom_toBottomOf="parent"
-		app:layout_constraintStart_toStartOf="parent"/>
+		app:layout_constraintStart_toStartOf="@+id/GLLeft"
+		app:layout_constraintTop_toBottomOf="@+id/buttonSignIn"/>
 
 	<TextView
 		android:id="@+id/textViewForgetPassword"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginBottom="4dp"
-		android:layout_marginEnd="4dp"
-		android:layout_marginRight="4dp"
+		android:layout_marginTop="24dp"
 		android:clickable="true"
 		android:focusable="true"
 		android:onClick="textViewForgetPassword"
 		android:text="@string/forgetPassword"
 		android:textColor="@color/colorBlue"
 		android:textSize="16sp"
-		app:layout_constraintBottom_toBottomOf="parent"
-		app:layout_constraintEnd_toEndOf="parent"/>
+		app:layout_constraintEnd_toStartOf="@+id/GLRight"
+		app:layout_constraintTop_toBottomOf="@+id/buttonSignIn"/>
 
 </android.support.constraint.ConstraintLayout>
